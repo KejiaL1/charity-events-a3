@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Event Details · Charity Events</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="search.html">Search</a>
+  </nav>
+
+  <main>
+    <article id="detail" aria-live="polite"></article>
+  </main>
+
+  <script type="module">
+    import { API_BASE, fetchJSON, formatDateTime, eventHero, formatPrice } from './assets/js/common.js';
+
+    function getId() {
+      return new URL(location.href).searchParams.get('id');
+    }
+
+    async function loadDetail() {
+      const id = getId();
+      const box = document.getElementById('detail');
+      if (!id) {
+        box.innerHTML = '<p class="error">Missing event ID.</p>';
+        return;
+      }
+      try {
+        const ev = await fetchJSON(`${API_BASE}/events/${id}`);
+
+        box.innerHTML = `
+          <div class="card detail">
+            <img class="media" src="${eventHero(ev)}" alt="${ev.title}" />
+
+            <div class="card-body">
+              <div class="badges">
+                <span class="badge">${ev.category_name}</span>
+              </div>
+
+              <h1>${ev.title}</h1>
+              <p class="meta">${ev.org_name}</p>
+              <p class="meta">Location: ${ev.venue || ''} · ${ev.city || ''} ${ev.state || ''}</p>
+              <p class="meta">Time: ${formatDateTime(ev.start_datetime)} — ${formatDateTime(ev.end_datetime)}</p>
+
+              <!-- Dedicated price & target section -->
+              <h3>Price & Goal</h3>
+              <p class="price-line">
+                Ticket: <span class="price">${formatPrice(ev.ticket_price_cents, ev.is_free)}</span>
+              </p>
+              <p class="price-line">
+                Target Amount: <span class="price">${ev.target_amount_cents ? formatPrice(ev.target_amount_cents, false) : '—'}</span>
+              </p>
+
+              <h3>Overview</h3>
+              <p>${ev.description || '(No description)'}</p>
+
+              <h3>Purpose</h3>
+              <p>${ev.purpose || '(No purpose specified)'}</p>
+
+              <h3>Organizer</h3>
+              <p>${ev.org_about || '(No organizer info)'}</p>
+              <p>Contact: ${ev.contact_email || '(N/A)'}</p>
+
+              <button id="registerBtn">${ev.is_free ? 'Register (Free)' : 'Get Tickets'}</button>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('registerBtn')?.addEventListener('click', () => {
+          alert('Registration/Tickets are illustrative for Assignment 2.');
+        });
+      } catch (e) {
+        console.error(e);
+        document.getElementById('detail').innerHTML = '<p class="error">Failed to load or event not found.</p>';
+      }
+    }
+
+    loadDetail();
+  </script>
+</body>
+</html>

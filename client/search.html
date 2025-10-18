@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Search · Charity Events</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="search.html">Search</a>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <h1>Find Charity Events</h1>
+      <p class="meta">Filter by date, city, and category. Click a result to view details.</p>
+    </section>
+
+    <form id="searchForm" class="filters">
+      <label>Date:
+        <input type="date" name="date" />
+      </label>
+      <label>City:
+        <input type="text" name="city" placeholder="e.g. Sydney" />
+      </label>
+      <label>Category:
+        <select name="categoryId" id="categorySelect">
+          <option value="">All</option>
+        </select>
+      </label>
+      <button type="submit">Search</button>
+      <button type="button" id="resetBtn">Reset</button>
+    </form>
+
+    <section id="results" class="grid" aria-live="polite"></section>
+  </main>
+
+  <script type="module">
+    import { API_BASE, fetchJSON, formatDateTime, isEnded, formatPrice, eventHero } from './assets/js/common.js';
+
+    async function loadCategories() {
+      const sel = document.getElementById('categorySelect');
+      try {
+        const list = await fetchJSON(`${API_BASE}/categories`);
+        list.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.name;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderResults(list) {
+      const box = document.getElementById('results');
+      if (!list.length) {
+        box.innerHTML = '<p class="meta">No matching events found.</p>';
+        return;
+      }
+
+      box.innerHTML = list.map(ev => `
+        <article class="card">
+          <img class="media" src="${eventHero(ev)}" alt="${ev.title}" />
+
+          <div class="badges">
+            <span class="badge ${isEnded(ev.end_datetime) ? 'ended' : 'upcoming'}">
+              ${isEnded(ev.end_datetime) ? 'Ended' : 'Upcoming'}
+            </span>
+            <span class="badge">${ev.category}</span>
+          </div>
+
+          <h3>${ev.title}</h3>
+          <p class="meta">${ev.org_name} · ${ev.city || ''} ${ev.state || ''}</p>
+          <p class="meta">${formatDateTime(ev.start_datetime)} — ${formatDateTime(ev.end_datetime)}</p>
+
+          <!-- Price on a dedicated line for clarity -->
+          <p class="price-line">Ticket: <span class="price">${formatPrice(ev.ticket_price_cents, ev.is_free)}</span></p>
+
+          <p><a href="event.html?id=${ev.id}">Details →</a></p>
+        </article>
+      `).join('');
+    }
+
+    async function search(params) {
+      const url = new URL(`${API_BASE}/events`);
+      Object.entries(params).forEach(([k, v]) => { if (v) url.searchParams.set(k, v); });
+      const list = await fetchJSON(url.toString());
+      renderResults(list);
+    }
+
+    document.getElementById('searchForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      search({
+        date: fd.get('date'),
+        city: fd.get('city'),
+        categoryId: fd.get('categoryId')
+      }).catch(err => {
+        console.error(err);
+        document.getElementById('results').innerHTML = '<p class="error">Search failed. Please try again.</p>';
+      });
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      document.getElementById('searchForm').reset();
+      document.getElementById('results').innerHTML = '';
+    });
+
+    loadCategories().catch(console.error);
+  </script>
+</body>
+</html>

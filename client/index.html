@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Charity Events · Home</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="search.html">Search</a>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <h1>Welcome to Charity Events</h1>
+      <p class="meta">
+        Browse upcoming runs, gala dinners, auctions, and blood drives in Sydney and beyond.
+      </p>
+    </section>
+
+    <section id="events" class="grid" aria-live="polite"></section>
+  </main>
+
+  <script type="module">
+    import { API_BASE, fetchJSON, formatDateTime, isEnded, formatPrice, eventHero } from './assets/js/common.js';
+
+    async function loadHome() {
+      const box = document.getElementById('events');
+      try {
+        const list = await fetchJSON(`${API_BASE}/events`);
+        if (!list.length) {
+          box.innerHTML = '<p class="meta">No events found.</p>';
+          return;
+        }
+
+        box.innerHTML = list.map(ev => `
+          <article class="card">
+            <img class="media" src="${eventHero(ev)}" alt="${ev.title}" />
+
+            <div class="badges">
+              <span class="badge ${isEnded(ev.end_datetime) ? 'ended' : 'upcoming'}">
+                ${isEnded(ev.end_datetime) ? 'Ended' : 'Upcoming'}
+              </span>
+              <span class="badge">${ev.category}</span>
+            </div>
+
+            <h3>${ev.title}</h3>
+            <p class="meta">${ev.org_name} · ${ev.city || ''} ${ev.state || ''}</p>
+            <p class="meta">${formatDateTime(ev.start_datetime)} — ${formatDateTime(ev.end_datetime)}</p>
+
+            <!-- Price moved to its own dedicated line -->
+            <p class="price-line">Ticket: <span class="price">${formatPrice(ev.ticket_price_cents, ev.is_free)}</span></p>
+
+            <p><a href="event.html?id=${ev.id}">View Details →</a></p>
+          </article>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+        box.innerHTML = '<p class="error">Loading failed, please try again later.</p>';
+      }
+    }
+
+    loadHome();
+  </script>
+</body>
+</html>
