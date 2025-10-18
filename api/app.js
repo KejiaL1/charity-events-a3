@@ -1,10 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import 'dotenv/config';
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
 
-import categoriesRouter from './routes/categories.js';
-import eventsRouter from './routes/events.js';
-import registrationsRouter from './routes/registrations.js'; // New import
+const categoriesRouter = require('./routes/categories');
+const eventsRouter = require('./routes/events');
+const registrationsRouter = require('./routes/registrations'); // New import
 
 const app = express();
 
