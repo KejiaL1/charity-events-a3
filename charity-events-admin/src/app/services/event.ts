@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, pipe } from 'rxjs';
+import { map } from 'rxjs';
 import { Event, EventRegistration } from '../models/event.model';
 
 @Injectable({
@@ -20,7 +21,9 @@ export class EventService {
         }
       });
     }
-    return this.http.get<Event[]>(this.apiUrl, { params });
+    return this.http.get<any>(`${this.apiUrl}/events`, { params }).pipe(
+      map(res => Array.isArray(res) ? res : (res?.events ?? []))
+    );
   }
 
   getEvent(id: number): Observable<Event> {

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 const API_BASE = 'http://localhost:3000/api';
 
@@ -16,7 +16,9 @@ export class EventService {
         params = params.set(k, String(v));
       }
     });
-    return this.http.get<any[]>(`${API_BASE}/events`, { params });
+    return this.http.get<any>(`${API_BASE}/events`, { params }).pipe(
+      map(res => Array.isArray(res) ? res : (res?.events ?? []))
+    );
   }
 
   getEvent(id: number): Observable<any> {

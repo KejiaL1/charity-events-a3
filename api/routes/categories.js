@@ -4,9 +4,14 @@ import { pool } from '../db.js';
 
 const router = Router();
 
-// GET /api/categories - 已有
 router.get('/', async (_req, res) => {
-  // 现有代码...
+  try {
+    const [rows] = await pool.query('SELECT id, name FROM categories ORDER BY name ASC');
+    res.json(rows);
+  } catch (err) {
+    console.error('GET /categories error:', err);
+    res.status(500).json({ error: 'DB_ERROR', message: err.message });
+  }
 });
 
 // POST /api/categories - 创建新分类

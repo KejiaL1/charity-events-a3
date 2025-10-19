@@ -1,6 +1,6 @@
 // api/routes/registrations.js
 import { Router } from 'express';
-import db from '../db.js';
+import { pool as db } from '../db.js';
 
 const router = Router();
 
