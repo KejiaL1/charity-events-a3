@@ -1,1 +1,134 @@
+<div class="row justify-content-center" *ngIf="event">
+  <div class="col-lg-10">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2><i class="fas fa-calendar me-2"></i>活动详情</h2>
+      <div>
+        <button class="btn btn-outline-secondary me-2" routerLink="/events">
+          <i class="fas fa-arrow-left me-1"></i>返回列表
+        </button>
+        <button class="btn btn-primary" [routerLink]="['/events/edit', event.id]">
+          <i class="fas fa-edit me-1"></i>编辑
+        </button>
+      </div>
+    </div>
 
+    <div class="row">
+      <!-- 活动信息 -->
+      <div class="col-lg-8">
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">活动信息</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <strong>标题:</strong>
+                <p class="mb-0">{{ event.title }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <strong>类别:</strong>
+                <p class="mb-0">
+                  <span class="badge bg-secondary">{{ event.category_name || event.category }}</span>
+                </p>
+              </div>
+              <div class="col-12 mb-3">
+                <strong>描述:</strong>
+                <p class="mb-0">{{ event.description }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <strong>地点:</strong>
+                <p class="mb-0">{{ event.city }}, {{ event.state }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <strong>价格:</strong>
+                <p class="mb-0">
+                  <span *ngIf="event.is_free" class="badge bg-success">免费</span>
+                  <span *ngIf="!event.is_free" class="text-muted">
+                    {{ (event.ticket_price_cents || 0) / 100 | currency }}
+                  </span>
+                </p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <strong>开始时间:</strong>
+                <p class="mb-0">{{ event.start_datetime | date:'yyyy-MM-dd HH:mm' }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <strong>结束时间:</strong>
+                <p class="mb-0">{{ event.end_datetime | date:'yyyy-MM-dd HH:mm' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 组织信息 -->
+        <div class="card mb-4" *ngIf="event.org_name || event.contact_email || event.org_about">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">组织信息</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3" *ngIf="event.org_name">
+                <strong>组织名称:</strong>
+                <p class="mb-0">{{ event.org_name }}</p>
+              </div>
+              <div class="col-md-6 mb-3" *ngIf="event.contact_email">
+                <strong>联系邮箱:</strong>
+                <p class="mb-0">{{ event.contact_email }}</p>
+              </div>
+              <div class="col-12 mb-3" *ngIf="event.org_about">
+                <strong>组织简介:</strong>
+                <p class="mb-0">{{ event.org_about }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 统计信息 -->
+      <div class="col-lg-4">
+        <div class="card mb-4">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">统计信息</h5>
+          </div>
+          <div class="card-body text-center">
+            <div class="mb-4">
+              <i class="fas fa-users fa-3x text-success mb-3"></i>
+              <h3>{{ event.total_registrations || 0 }}</h3>
+              <p class="text-muted">总注册人数</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 快速操作 -->
+        <div class="card">
+          <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">快速操作</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary" [routerLink]="['/events/edit', event.id]">
+                <i class="fas fa-edit me-1"></i>编辑活动
+              </button>
+              <button class="btn btn-outline-danger" (click)="deleteEvent()">
+                <i class="fas fa-trash me-1"></i>删除活动
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!event && !loading" class="text-center py-5">
+  <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+  <h4>活动未找到</h4>
+  <p class="text-muted">请检查活动ID是否正确</p>
+  <button class="btn btn-primary" routerLink="/events">返回活动列表</button>
+</div>
+
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">加载中...</span>
+  </div>
+</div>
