@@ -1,24 +1,71 @@
-<section ng-if="$vm.loading">Loading event...</section>
+<section class="card">
+  <h1>Event Registration</h1>
 
-<article class="card" ng-if="!$vm.loading && $vm.event">
-  <h1>Register for {{$vm.event.title}}</h1>
-  <p class="meta">{{$vm.event.category_name}} · {{$vm.event.org_name}}</p>
-  <p class="meta">{{$vm.event.start_datetime | dateTime}} — {{$vm.event.end_datetime | dateTime}}</p>
-  <p class="meta">Ticket: <strong>{{$vm.event.ticket_price_cents | price:$vm.event.is_free}}</strong></p>
+  <div class="event-summary" ng-if="$vm.ev">
+    <h3 class="event-title">{{$vm.ev.title}}</h3>
+    <p class="meta">
+      {{$vm.ev.city}} {{$vm.ev.state}} ·
+      {{$vm.ev.start_datetime | dateTime}} — {{$vm.ev.end_datetime | dateTime}}
+    </p>
+    <p class="price-line">
+      Ticket: <span class="price">{{$vm.ev.ticket_price_cents | price:$vm.ev.is_free}}</span>
+    </p>
+  </div>
 
-  <form ng-submit="$vm.submit()" class="form">
-    <label>
-      Name:
-      <input type="text" ng-model="$vm.form.user_name" required />
-    </label>
-    <label>
-      Email:
-      <input type="email" ng-model="$vm.form.contact_email" required />
-    </label>
-    <label>
-      Number of tickets:
-      <input type="number" ng-model="$vm.form.num_tickets" min="1" />
-    </label>
-    <button type="submit">Submit Registration</button>
+  <form name="regForm" novalidate ng-submit="$vm.submit(regForm)" class="form">
+    <div class="form-grid">
+      <!-- Full Name -->
+      <div class="form-field" ng-class="{'has-error': regForm.user_name.$touched && regForm.user_name.$invalid}">
+        <label for="user_name">Full Name</label>
+        <input id="user_name" name="user_name" type="text"
+               ng-model="$vm.form.user_name" required maxlength="120" />
+        <small class="hint" ng-if="regForm.user_name.$touched && regForm.user_name.$error.required">
+          Please enter your name.
+        </small>
+      </div>
+
+      <!-- Email -->
+      <div class="form-field" ng-class="{'has-error': regForm.contact_email.$touched && regForm.contact_email.$invalid}">
+        <label for="contact_email">Email</label>
+        <input id="contact_email" name="contact_email" type="email"
+               ng-model="$vm.form.contact_email" required maxlength="160" />
+        <small class="hint" ng-if="regForm.contact_email.$touched && regForm.contact_email.$error.required">
+          Email is required.
+        </small>
+        <small class="hint" ng-if="regForm.contact_email.$touched && regForm.contact_email.$error.email">
+          Please enter a valid email.
+        </small>
+      </div>
+
+      <!-- Tickets -->
+      <div class="form-field" ng-class="{'has-error': regForm.num_tickets.$touched && regForm.num_tickets.$invalid}">
+        <label for="num_tickets">Tickets</label>
+        <input id="num_tickets" name="num_tickets" type="number" min="1" step="1"
+               ng-model="$vm.form.num_tickets" required />
+        <small class="hint" ng-if="regForm.num_tickets.$touched && regForm.num_tickets.$error.required">
+          Please select ticket count.
+        </small>
+        <small class="hint" ng-if="regForm.num_tickets.$touched && regForm.num_tickets.$error.min">
+          Minimum is 1 ticket.
+        </small>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-field form-span-2">
+        <label for="notes">Notes (optional)</label>
+        <textarea id="notes" name="notes" rows="4"
+                  ng-model="$vm.form.notes" placeholder="Any special requirements..."></textarea>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a class="btn" href="#!/event/{{$vm.ev.id}}">Back</a>
+      <button class="btn primary" type="submit" ng-disabled="regForm.$invalid || $vm.submitting">
+        {{$vm.submitting ? 'Submitting...' : 'Submit Registration'}}
+      </button>
+    </div>
+
+    <p class="alert success" ng-if="$vm.success">Registration submitted successfully!</p>
+    <p class="alert error"   ng-if="$vm.error">{{$vm.error}}</p>
   </form>
-</article>
+</section>

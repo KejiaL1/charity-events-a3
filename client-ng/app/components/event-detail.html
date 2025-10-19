@@ -29,8 +29,8 @@
   <p>{{$vm.ev.org_about || '(None available)'}} </p>
   <p>Contact: {{$vm.ev.contact_email || '(None available)'}} </p>
 
-  <p>
+  <div class="actions">
     <a class="btn" href="#!/search">Back to Search</a>
-    <a class="btn" href="#!/register/{{$vm.ev.id}}">Register →</a>
-  </p>
+    <a class="btn primary" href="#!/register/{{$vm.ev.id}}">Register →</a>
+  </div>
 </article>
