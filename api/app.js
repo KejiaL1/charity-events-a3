@@ -1,12 +1,13 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
+// api/app.js (ESM)
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
 dotenv.config();
 
-const eventsRouter = require('./routes/events.js');
-const categoriesRouter = require('./routes/categories.js');
-const registrationsRouter = require('./routes/registrations.js');
-const db = require('./db.js');
+import eventsRouter from './routes/events.js';
+import categoriesRouter from './routes/categories.js';
+import registrationsRouter from './routes/registrations.js';
+import db from './db.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,5 +30,3 @@ app.use('/api/registrations', registrationsRouter);
 app.listen(PORT, () => {
   console.log(`✅ API listening on http://localhost:${PORT}`);
 });
-
-module.exports = app;

@@ -1,6 +1,6 @@
 // api/routes/events.js
-const { Router } = require('express');
-const { pool } = require('../db.js');
+import { Router } from 'express';
+import { pool } from '../db.js';
 
 const router = Router();
 
@@ -74,4 +74,4 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
