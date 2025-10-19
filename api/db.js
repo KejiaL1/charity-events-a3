@@ -1,14 +1,15 @@
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+dotenv.config();
 
-// Create MySQL connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
+const pool = await mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS || 'Qazplm20040401',
+  database: process.env.DB_NAME || 'charityevents_db',
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 10
 });
 
-module.exports = { pool };
+export default pool; 
+export { pool }; 

@@ -1,0 +1,36 @@
+<h1>Search</h1>
+
+<form class="card" ng-submit="$vm.search()">
+  <label>Date:
+    <input type="date" ng-model="$vm.form.date" />
+  </label>
+  <label>City:
+    <input type="text" ng-model="$vm.form.city" placeholder="e.g., Sydney" />
+  </label>
+  <label>Category:
+    <select ng-model="$vm.form.categoryId" ng-options="c.id as c.name for c in $vm.categories">
+      <option value="">All</option>
+    </select>
+  </label>
+  <button type="submit">Search</button>
+  <button type="button" ng-click="$vm.reset()">Reset</button>
+</form>
+
+<section ng-if="$vm.loading">Searching...</section>
+
+<section ng-if="!$vm.loading && $vm.results.length === 0" class="meta">
+  No matching events.
+</section>
+
+<div class="grid" ng-if="!$vm.loading && $vm.results.length">
+  <article class="card" ng-repeat="ev in $vm.results">
+    <img class="media" ng-if="ev.hero_image_url" ng-src="{{ev.hero_image_url}}" alt="{{ev.title}}">
+    <h3>{{ev.title}}</h3>
+    <p class="meta">{{ev.category}} · {{ev.org_name}} · {{ev.city}}</p>
+    <p class="meta">
+      {{ev.start_datetime | dateTime}} — {{ev.end_datetime | dateTime}}
+    </p>
+    <p class="price-line">Ticket: <span class="price">{{ev.ticket_price_cents | price:ev.is_free}}</span></p>
+    <p><a href="#!/event/{{ev.id}}">Details →</a></p>
+  </article>
+</div>

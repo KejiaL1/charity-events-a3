@@ -1,9 +1,9 @@
-const { Router } = require('express');
-const { pool } = require('../db.js');
+import { Router } from 'express';
+import { pool } from '../db.js';
 
 const router = Router();
 
-// GET /api/categories - Get all categories
+// GET /api/categories
 router.get('/', async (_req, res) => {
   try {
     const [rows] = await pool.query(
@@ -16,4 +16,5 @@ router.get('/', async (_req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
+ 

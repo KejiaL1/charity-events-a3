@@ -2,12 +2,13 @@
   "name": "charity-events-api",
   "version": "1.0.0",
   "description": "Express API for charity events (A3 assignment)",
+  "type": "module",
   "main": "app.js",
   "scripts": {
     "dev": "nodemon app.js",
     "start": "node app.js"
   },
-  "keywords": ["charity", "events", "api", "express"],
+  "keywords": [],
   "author": "Kejia Li",
   "license": "ISC",
   "dependencies": {

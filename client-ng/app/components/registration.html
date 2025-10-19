@@ -1,0 +1,24 @@
+<section ng-if="$vm.loading">Loading event...</section>
+
+<article class="card" ng-if="!$vm.loading && $vm.event">
+  <h1>Register for {{$vm.event.title}}</h1>
+  <p class="meta">{{$vm.event.category_name}} · {{$vm.event.org_name}}</p>
+  <p class="meta">{{$vm.event.start_datetime | dateTime}} — {{$vm.event.end_datetime | dateTime}}</p>
+  <p class="meta">Ticket: <strong>{{$vm.event.ticket_price_cents | price:$vm.event.is_free}}</strong></p>
+
+  <form ng-submit="$vm.submit()" class="form">
+    <label>
+      Name:
+      <input type="text" ng-model="$vm.form.user_name" required />
+    </label>
+    <label>
+      Email:
+      <input type="email" ng-model="$vm.form.contact_email" required />
+    </label>
+    <label>
+      Number of tickets:
+      <input type="number" ng-model="$vm.form.num_tickets" min="1" />
+    </label>
+    <button type="submit">Submit Registration</button>
+  </form>
+</article>

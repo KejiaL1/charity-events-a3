@@ -1,0 +1,36 @@
+<section ng-if="$vm.loading" class="meta">Loading...</section>
+
+<article class="card detail" ng-if="!$vm.loading && $vm.ev">
+  <img class="media" ng-src="{{ ($vm.ev | hero) }}" alt="{{$vm.ev.title}}">
+
+  <div class="badges">
+    <span class="badge" ng-class="($vm.ev.end_datetime | isEnded) ? 'ended' : 'upcoming'">
+      {{ ($vm.ev.end_datetime | isEnded) ? 'Ended' : 'Upcoming' }}
+    </span>
+    <span class="badge">{{$vm.ev.category_name}}</span>
+  </div>
+
+  <h1>{{$vm.ev.title}}</h1>
+  <p class="meta">{{$vm.ev.org_name}}</p>
+  <p class="meta">Location: {{$vm.ev.venue}} · {{$vm.ev.city}} {{$vm.ev.state}}</p>
+  <p class="meta">Time: {{$vm.ev.start_datetime | dateTime}} — {{$vm.ev.end_datetime | dateTime}}</p>
+
+  <p class="price-line">Ticket:
+    <span class="price">{{$vm.ev.ticket_price_cents | price:$vm.ev.is_free}}</span>
+  </p>
+
+  <h3>Summary</h3>
+  <p>{{$vm.ev.description || '(None available)'}}</p>
+
+  <h3>Purpose</h3>
+  <p>{{$vm.ev.purpose || '(None available)'}}</p>
+
+  <h3>Organizer</h3>
+  <p>{{$vm.ev.org_about || '(None available)'}} </p>
+  <p>Contact: {{$vm.ev.contact_email || '(None available)'}} </p>
+
+  <p>
+    <a class="btn" href="#!/search">Back to Search</a>
+    <a class="btn" href="#!/register/{{$vm.ev.id}}">Register →</a>
+  </p>
+</article>
