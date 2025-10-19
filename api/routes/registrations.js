@@ -1,10 +1,10 @@
-import { Router } from 'express';
-import db from '../db.js';
+const { Router } = require('express');
+const db = require('../db.js');
 
 const router = Router();
 
 // POST /api/registrations
-router.post('/registrations', async (req, res) => {
+router.post('/', async (req, res) => {
   const { event_id, user_name, contact_email, num_tickets } = req.body || {};
   if (!event_id || !user_name || !contact_email) {
     return res.status(400).json({ error: 'event_id, user_name, contact_email are required' });
@@ -32,4 +32,4 @@ router.post('/registrations', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
