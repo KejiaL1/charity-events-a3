@@ -1,0 +1,29 @@
+<section class="card">
+  <div class="pad">
+    <h1>Welcome to Charity Events</h1>
+    <p class="meta">Browse upcoming runs, gala dinners, auctions, and blood drives in Sydney and beyond.</p>
+  </div>
+</section>
+
+<section *ngIf="loading" class="meta">Loading events...</section>
+
+<section *ngIf="!loading" class="grid" aria-live="polite">
+  <article class="card" *ngFor="let ev of events">
+    <img class="media" [src]="ev | hero" [alt]="ev.title" />
+    <div class="pad">
+      <div class="badges">
+        <span class="badge" [class.upcoming]="!(ev.end_datetime | isEnded)" [class.ended]="ev.end_datetime | isEnded">
+          {{ (ev.end_datetime | isEnded) ? 'Ended' : 'Upcoming' }}
+        </span>
+        <span class="badge">{{ ev.category || ev.category_name }}</span>
+      </div>
+
+      <h3>{{ev.title}}</h3>
+      <p class="meta">{{ev.org_name}} · {{ev.city}} {{ev.state}}</p>
+      <p class="meta">{{ev.start_datetime | dateTime}} — {{ev.end_datetime | dateTime}}</p>
+      <p class="price-line">Ticket: <span class="price">{{ev.ticket_price_cents | price:ev.is_free}}</span></p>
+
+      <p><a class="btn" [routerLink]="['/event', ev.id]">View Details →</a></p>
+    </div>
+  </article>
+</section>

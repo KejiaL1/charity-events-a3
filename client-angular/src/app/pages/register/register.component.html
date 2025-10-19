@@ -1,0 +1,40 @@
+<section class="card">
+  <div class="pad">
+    <h1>Event Registration</h1>
+
+    <div *ngIf="ev" class="meta" style="margin-bottom: 10px;">
+      <strong>{{ev.title}}</strong><br>
+      {{ev.city}} {{ev.state}} · {{ev.start_datetime | dateTime}} — {{ev.end_datetime | dateTime}}<br>
+      Ticket: {{ev.ticket_price_cents | price:ev.is_free}}
+    </div>
+
+    <form (ngSubmit)="submit()" class="form" novalidate>
+      <label>
+        Full Name
+        <input name="user_name" [(ngModel)]="form.user_name" required maxlength="120">
+      </label>
+      <label>
+        Email
+        <input name="contact_email" [(ngModel)]="form.contact_email" type="email" required maxlength="160">
+      </label>
+      <label>
+        Tickets
+        <input name="num_tickets" [(ngModel)]="form.num_tickets" type="number" min="1">
+      </label>
+      <label class="full">
+        Notes (optional)
+        <textarea name="notes" [(ngModel)]="form.notes" rows="4" placeholder="Any special requirements..."></textarea>
+      </label>
+
+      <div class="full">
+        <a class="btn ghost" [routerLink]="['/event', ev?.id]">Back</a>
+        <button class="btn" type="submit" [disabled]="submitting">
+          {{ submitting ? 'Submitting...' : 'Submit Registration' }}
+        </button>
+      </div>
+
+      <p class="alert success" *ngIf="success">Registration submitted successfully!</p>
+      <p class="alert error" *ngIf="error">{{error}}</p>
+    </form>
+  </div>
+</section>

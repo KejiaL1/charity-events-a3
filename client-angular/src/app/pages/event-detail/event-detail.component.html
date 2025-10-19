@@ -1,0 +1,35 @@
+<section class="meta" *ngIf="loading">Loading...</section>
+
+<article class="card" *ngIf="!loading && ev">
+  <img class="media" [src]="ev | hero" [alt]="ev.title">
+
+  <div class="pad">
+    <div class="badges">
+      <span class="badge" [class.upcoming]="!(ev.end_datetime | isEnded)" [class.ended]="ev.end_datetime | isEnded">
+        {{ (ev.end_datetime | isEnded) ? 'Ended' : 'Upcoming' }}
+      </span>
+      <span class="badge">{{ev.category_name}}</span>
+    </div>
+
+    <h1>{{ev.title}}</h1>
+    <p class="meta">{{ev.org_name}}</p>
+    <p class="meta">Location: {{ev.venue}} · {{ev.city}} {{ev.state}}</p>
+    <p class="meta">Time: {{ev.start_datetime | dateTime}} — {{ev.end_datetime | dateTime}}</p>
+    <p class="price-line">Ticket: <span class="price">{{ev.ticket_price_cents | price:ev.is_free}}</span></p>
+
+    <h3>Summary</h3>
+    <p>{{ev.description || '(None available)'}} </p>
+
+    <h3>Purpose</h3>
+    <p>{{ev.purpose || '(None available)'}} </p>
+
+    <h3>Organizer</h3>
+    <p>{{ev.org_about || '(None available)'}} </p>
+    <p>Contact: {{ev.contact_email || '(None available)'}} </p>
+
+    <p style="margin-top: 12px;">
+      <a class="btn ghost" routerLink="/search">Back to Search</a>
+      <a class="btn" [routerLink]="['/register', ev.id]">Register →</a>
+    </p>
+  </div>
+</article>

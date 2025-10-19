@@ -1,0 +1,42 @@
+<section class="card">
+  <div class="pad">
+    <h1>Search Events</h1>
+    <form (ngSubmit)="search()" class="form">
+      <label>
+        Date
+        <input type="date" [(ngModel)]="date" name="date">
+      </label>
+      <label>
+        City
+        <input type="text" [(ngModel)]="city" name="city" placeholder="e.g., Sydney">
+      </label>
+      <label>
+        Category
+        <select [(ngModel)]="categoryId" name="categoryId">
+          <option value="">All</option>
+          <option *ngFor="let c of categories" [value]="c.id">{{c.name}}</option>
+        </select>
+      </label>
+      <div class="full">
+        <button type="submit" class="btn">Search</button>
+        <button type="button" class="btn ghost" (click)="reset()">Reset</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section *ngIf="loading" class="meta">Loading...</section>
+
+<section *ngIf="!loading && results.length === 0" class="meta">No matching events.</section>
+
+<section *ngIf="!loading && results.length">
+  <article class="card" *ngFor="let ev of results">
+    <div class="pad">
+      <h3>{{ev.title}}</h3>
+      <p class="meta">{{ev.category || ev.category_name}} · {{ev.org_name}} · {{ev.city}}</p>
+      <p class="meta">{{ev.start_datetime | dateTime}} — {{ev.end_datetime | dateTime}}</p>
+      <p class="meta">Ticket: {{ev.ticket_price_cents | price:ev.is_free}}</p>
+      <p><a class="btn" [routerLink]="['/event', ev.id]">Details →</a></p>
+    </div>
+  </article>
+</section>
