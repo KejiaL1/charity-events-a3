@@ -4,42 +4,119 @@ import { pool } from '../db.js';
 
 const router = Router();
 
-// GET /api/events - Get all events with optional filtering
+// GET /api/events - Get all events with optional filtering and pagination
 router.get('/', async (req, res) => {
   try {
-    let { date, city, categoryId, search } = req.query;
+    let { 
+      date, 
+      city, 
+      categoryId, 
+      search, 
+      page = 1, 
+      limit = 10,
+      status,
+      organizationId 
+    } = req.query;
 
+    // Parse and validate pagination parameters
+    const pageNum = Math.max(1, Number.parseInt(page, 10));
+    const limitNum = Math.min(50, Math.max(1, Number.parseInt(limit, 10)));
+    const offset = (pageNum - 1) * limitNum;
+
+    // Parse and validate other parameters
     const catId = Number.parseInt(categoryId, 10);
     const hasValidCatId = Number.isInteger(catId) && catId > 0;
+    
+    const orgId = Number.parseInt(organizationId, 10);
+    const hasValidOrgId = Number.isInteger(orgId) && orgId > 0;
+    
     const dateOk = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date);
     city = (typeof city === 'string' ? city.trim() : '');
     search = (typeof search === 'string' ? search.trim() : '');
+    
+    // Validate status parameter
+    const validStatuses = ['upcoming', 'past', 'paused'];
+    const statusOk = validStatuses.includes(status);
 
+    // Build SQL query with filtering
     let sql = `
       SELECT
         e.id, e.title, e.city, e.state,
         e.start_datetime, e.end_datetime,
-        e.hero_image_url,
+        e.hero_image_url, e.status,
         e.ticket_price_cents, e.is_free,
+        e.target_amount_cents, e.raised_amount_cents,
         c.name AS category,
-        o.name AS org_name
+        o.name AS org_name,
+        (SELECT COALESCE(SUM(r.num_tickets), 0) 
+         FROM registrations r 
+         WHERE r.event_id = e.id) AS total_tickets_sold
       FROM events e
-      LEFT JOIN categories    c ON e.category_id = c.id
-      LEFT JOIN organizations o ON e.org_id      = o.id
+      LEFT JOIN categories c ON e.category_id = c.id
+      LEFT JOIN organizations o ON e.org_id = o.id
       WHERE 1=1
     `;
+    
     const params = [];
-    if (dateOk)      { sql += ` AND DATE(e.start_datetime) = ?`; params.push(date); }
-    if (city)        { sql += ` AND e.city LIKE ?`;              params.push(`%${city}%`); }
-    if (hasValidCatId){ sql += ` AND e.category_id = ?`;          params.push(catId); }
-    if (search)      { sql += ` AND (e.title LIKE ? OR e.description LIKE ?)`; params.push(`%${search}%`, `%${search}%`); }
-    sql += ` ORDER BY e.start_datetime ASC`;
+    
+    // Add filters
+    if (dateOk) { 
+      sql += ` AND DATE(e.start_datetime) = ?`; 
+      params.push(date); 
+    }
+    if (city) { 
+      sql += ` AND e.city LIKE ?`; 
+      params.push(`%${city}%`); 
+    }
+    if (hasValidCatId) { 
+      sql += ` AND e.category_id = ?`; 
+      params.push(catId); 
+    }
+    if (hasValidOrgId) { 
+      sql += ` AND e.org_id = ?`; 
+      params.push(orgId); 
+    }
+    if (statusOk) { 
+      sql += ` AND e.status = ?`; 
+      params.push(status); 
+    }
+    if (search) { 
+      sql += ` AND (e.title LIKE ? OR e.description LIKE ? OR e.purpose LIKE ?)`; 
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`); 
+    }
 
+    // Get total count for pagination
+    const countSql = `SELECT COUNT(*) as total FROM (${sql}) as filtered_events`;
+    const [countResult] = await pool.query(countSql, params);
+    const totalEvents = countResult[0].total;
+    const totalPages = Math.ceil(totalEvents / limitNum);
+
+    // Add sorting and pagination to main query
+    sql += ` ORDER BY e.start_datetime ASC LIMIT ? OFFSET ?`;
+    params.push(limitNum, offset);
+
+    // Execute main query
     const [rows] = await pool.query(sql, params);
-    res.json(rows);
+
+    // Return response with pagination info
+    res.json({
+      events: rows,
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_events: totalEvents,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1,
+        page_size: limitNum
+      }
+    });
+
   } catch (err) {
     console.error('GET /api/events error:', err);
-    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
+    res.status(500).json({ 
+      error: 'DATABASE_ERROR', 
+      message: err.message 
+    });
   }
 });
 
@@ -48,7 +125,10 @@ router.get('/:id', async (req, res) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
     if (!Number.isInteger(id) || id <= 0) {
-      return res.status(400).json({ error: 'BAD_ID', message: 'id must be a positive integer' });
+      return res.status(400).json({ 
+        error: 'BAD_ID', 
+        message: 'id must be a positive integer' 
+      });
     }
 
     const [rows] = await pool.query(`
@@ -62,8 +142,8 @@ router.get('/:id', async (req, res) => {
            FROM registrations r
           WHERE r.event_id = e.id) AS total_registrations
       FROM events e
-      LEFT JOIN categories    c ON e.category_id = c.id
-      LEFT JOIN organizations o ON e.org_id      = o.id
+      LEFT JOIN categories c ON e.category_id = c.id
+      LEFT JOIN organizations o ON e.org_id = o.id
       WHERE e.id = ?
       LIMIT 1
     `, [id]);
@@ -72,7 +152,64 @@ router.get('/:id', async (req, res) => {
     res.json(rows[0]);
   } catch (err) {
     console.error('GET /api/events/:id error:', err);
-    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
+    res.status(500).json({ 
+      error: 'DATABASE_ERROR', 
+      message: err.message 
+    });
+  }
+});
+
+// GET /api/events/:id/registrations - Get all registrations for a specific event
+router.get('/:id/registrations', async (req, res) => {
+  try {
+    const eventId = Number.parseInt(req.params.id, 10);
+    
+    // Validate event ID
+    if (!Number.isInteger(eventId) || eventId <= 0) {
+      return res.status(400).json({ 
+        error: 'INVALID_EVENT_ID', 
+        message: 'Event ID must be a positive integer' 
+      });
+    }
+
+    // Check if event exists
+    const [eventCheck] = await pool.query('SELECT id FROM events WHERE id = ?', [eventId]);
+    if (!eventCheck.length) {
+      return res.status(404).json({ 
+        error: 'EVENT_NOT_FOUND', 
+        message: 'Event not found' 
+      });
+    }
+
+    // Get registrations for the event, sorted by registration date (latest first)
+    const [registrations] = await pool.query(`
+      SELECT 
+        r.id,
+        r.user_name,
+        r.contact_email,
+        r.num_tickets,
+        r.registration_date
+      FROM registrations r
+      WHERE r.event_id = ?
+      ORDER BY r.registration_date DESC
+    `, [eventId]);
+
+    // Calculate total tickets for the event
+    const totalTickets = registrations.reduce((sum, reg) => sum + reg.num_tickets, 0);
+
+    res.json({
+      event_id: eventId,
+      total_registrations: registrations.length,
+      total_tickets: totalTickets,
+      registrations: registrations
+    });
+
+  } catch (err) {
+    console.error('GET /api/events/:id/registrations error:', err);
+    res.status(500).json({ 
+      error: 'DATABASE_ERROR', 
+      message: err.message 
+    });
   }
 });
 
@@ -109,12 +246,18 @@ router.post('/', async (req, res) => {
     // Validate category_id and org_id exist
     const [categoryCheck] = await pool.query('SELECT id FROM categories WHERE id = ?', [category_id]);
     if (!categoryCheck.length) {
-      return res.status(400).json({ error: 'INVALID_CATEGORY', message: 'Category does not exist' });
+      return res.status(400).json({ 
+        error: 'INVALID_CATEGORY', 
+        message: 'Category does not exist' 
+      });
     }
 
     const [orgCheck] = await pool.query('SELECT id FROM organizations WHERE id = ?', [org_id]);
     if (!orgCheck.length) {
-      return res.status(400).json({ error: 'INVALID_ORGANIZATION', message: 'Organization does not exist' });
+      return res.status(400).json({ 
+        error: 'INVALID_ORGANIZATION', 
+        message: 'Organization does not exist' 
+      });
     }
 
     // Validate datetime format and logic
@@ -122,11 +265,17 @@ router.post('/', async (req, res) => {
     const endDate = new Date(end_datetime);
     
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return res.status(400).json({ error: 'INVALID_DATETIME', message: 'Invalid datetime format' });
+      return res.status(400).json({ 
+        error: 'INVALID_DATETIME', 
+        message: 'Invalid datetime format' 
+      });
     }
 
     if (startDate >= endDate) {
-      return res.status(400).json({ error: 'INVALID_DATETIME_RANGE', message: 'start_datetime must be before end_datetime' });
+      return res.status(400).json({ 
+        error: 'INVALID_DATETIME_RANGE', 
+        message: 'start_datetime must be before end_datetime' 
+      });
     }
 
     // Insert new event
@@ -155,7 +304,10 @@ router.post('/', async (req, res) => {
     res.status(201).json(newEvent[0]);
   } catch (err) {
     console.error('POST /api/events error:', err);
-    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
+    res.status(500).json({ 
+      error: 'DATABASE_ERROR', 
+      message: err.message 
+    });
   }
 });
 
@@ -164,7 +316,10 @@ router.put('/:id', async (req, res) => {
   try {
     const eventId = Number.parseInt(req.params.id, 10);
     if (!Number.isInteger(eventId) || eventId <= 0) {
-      return res.status(400).json({ error: 'BAD_ID', message: 'id must be a positive integer' });
+      return res.status(400).json({ 
+        error: 'BAD_ID', 
+        message: 'id must be a positive integer' 
+      });
     }
 
     const {
@@ -189,14 +344,20 @@ router.put('/:id', async (req, res) => {
     // Check if event exists
     const [existingEvent] = await pool.query('SELECT id FROM events WHERE id = ?', [eventId]);
     if (!existingEvent.length) {
-      return res.status(404).json({ error: 'EVENT_NOT_FOUND', message: 'Event not found' });
+      return res.status(404).json({ 
+        error: 'EVENT_NOT_FOUND', 
+        message: 'Event not found' 
+      });
     }
 
     // Validate category_id if provided
     if (category_id) {
       const [categoryCheck] = await pool.query('SELECT id FROM categories WHERE id = ?', [category_id]);
       if (!categoryCheck.length) {
-        return res.status(400).json({ error: 'INVALID_CATEGORY', message: 'Category does not exist' });
+        return res.status(400).json({ 
+          error: 'INVALID_CATEGORY', 
+          message: 'Category does not exist' 
+        });
       }
     }
 
@@ -204,7 +365,10 @@ router.put('/:id', async (req, res) => {
     if (org_id) {
       const [orgCheck] = await pool.query('SELECT id FROM organizations WHERE id = ?', [org_id]);
       if (!orgCheck.length) {
-        return res.status(400).json({ error: 'INVALID_ORGANIZATION', message: 'Organization does not exist' });
+        return res.status(400).json({ 
+          error: 'INVALID_ORGANIZATION', 
+          message: 'Organization does not exist' 
+        });
       }
     }
 
@@ -214,11 +378,17 @@ router.put('/:id', async (req, res) => {
       const endDate = new Date(end_datetime);
       
       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        return res.status(400).json({ error: 'INVALID_DATETIME', message: 'Invalid datetime format' });
+        return res.status(400).json({ 
+          error: 'INVALID_DATETIME', 
+          message: 'Invalid datetime format' 
+        });
       }
 
       if (startDate >= endDate) {
-        return res.status(400).json({ error: 'INVALID_DATETIME_RANGE', message: 'start_datetime must be before end_datetime' });
+        return res.status(400).json({ 
+          error: 'INVALID_DATETIME_RANGE', 
+          message: 'start_datetime must be before end_datetime' 
+        });
       }
     }
 
@@ -244,7 +414,10 @@ router.put('/:id', async (req, res) => {
     if (hero_image_url !== undefined) { updateFields.push('hero_image_url = ?'); updateValues.push(hero_image_url); }
 
     if (updateFields.length === 0) {
-      return res.status(400).json({ error: 'NO_FIELDS_TO_UPDATE', message: 'No fields provided for update' });
+      return res.status(400).json({ 
+        error: 'NO_FIELDS_TO_UPDATE', 
+        message: 'No fields provided for update' 
+      });
     }
 
     updateValues.push(eventId);
@@ -264,44 +437,92 @@ router.put('/:id', async (req, res) => {
     res.json(updatedEvent[0]);
   } catch (err) {
     console.error('PUT /api/events/:id error:', err);
-    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
+    res.status(500).json({ 
+      error: 'DATABASE_ERROR', 
+      message: err.message 
+    });
   }
 });
 
-// DELETE /api/events/:id - Delete an event
+// DELETE /api/events/:id - Delete an event with enhanced validation
 router.delete('/:id', async (req, res) => {
   try {
     const eventId = Number.parseInt(req.params.id, 10);
+    
+    // Validate event ID
     if (!Number.isInteger(eventId) || eventId <= 0) {
-      return res.status(400).json({ error: 'BAD_ID', message: 'id must be a positive integer' });
+      return res.status(400).json({ 
+        error: 'BAD_ID', 
+        message: 'Event ID must be a positive integer' 
+      });
     }
 
-    // Check if event exists
-    const [existingEvent] = await pool.query('SELECT id FROM events WHERE id = ?', [eventId]);
-    if (!existingEvent.length) {
-      return res.status(404).json({ error: 'EVENT_NOT_FOUND', message: 'Event not found' });
+    // Check if event exists and get current registrations
+    const [eventCheck] = await pool.query(
+      `SELECT e.*, 
+              (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) as registration_count
+       FROM events e 
+       WHERE e.id = ?`,
+      [eventId]
+    );
+
+    if (!eventCheck.length) {
+      return res.status(404).json({ 
+        error: 'EVENT_NOT_FOUND', 
+        message: 'Event not found' 
+      });
     }
 
-    // Delete the event (registrations will be automatically deleted due to CASCADE constraint)
+    const event = eventCheck[0];
+
+    // Check if event has registrations
+    if (event.registration_count > 0) {
+      return res.status(409).json({
+        error: 'EVENT_HAS_REGISTRATIONS',
+        message: `Cannot delete event because it has ${event.registration_count} registration(s). Delete registrations first.`,
+        registrationCount: event.registration_count
+      });
+    }
+
+    // Check if event is in the past
+    const currentDateTime = new Date();
+    const eventEndDateTime = new Date(event.end_datetime);
+    
+    if (eventEndDateTime < currentDateTime) {
+      return res.status(409).json({
+        error: 'EVENT_ALREADY_ENDED',
+        message: 'Cannot delete events that have already ended. Consider archiving instead.'
+      });
+    }
+
+    // Delete the event
     await pool.query('DELETE FROM events WHERE id = ?', [eventId]);
 
     res.status(200).json({
       success: true,
       message: 'Event deleted successfully',
-      deletedId: eventId
+      deletedId: eventId,
+      deletedEvent: {
+        title: event.title,
+        start_datetime: event.start_datetime
+      }
     });
+
   } catch (err) {
     console.error('DELETE /api/events/:id error:', err);
     
     // Handle foreign key constraint errors
     if (err.code === 'ER_ROW_IS_REFERENCED_2' || err.code === 'ER_ROW_IS_REFERENCED') {
       return res.status(409).json({
-        error: 'EVENT_HAS_REGISTRATIONS',
-        message: 'Cannot delete event because it has existing registrations. Delete registrations first or use soft delete.'
+        error: 'EVENT_HAS_DEPENDENCIES',
+        message: 'Cannot delete event due to existing dependencies in the database.'
       });
     }
 
-    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
+    res.status(500).json({ 
+      error: 'DATABASE_ERROR', 
+      message: err.message 
+    });
   }
 });
 
