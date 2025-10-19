@@ -5,7 +5,7 @@ dotenv.config();
 const pool = await mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASS || 'Qazplm20040401',
+  password: process.env.DB_PASS || 'root',
   database: process.env.DB_NAME || 'charityevents_db',
   waitForConnections: true,
   connectionLimit: 10

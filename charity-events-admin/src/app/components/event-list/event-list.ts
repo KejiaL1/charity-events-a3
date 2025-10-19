@@ -51,7 +51,11 @@ export class EventListComponent implements OnInit {
       error: (error) => {
         console.error('Error loading events:', error);
         this.loading = false;
-        alert('加载活动列表失败');
+        if (typeof window !== 'undefined') {
+          alert('加载活动列表失败');
+        } else {
+          console.error('加载活动列表失败');
+        }
       }
     });
   }
