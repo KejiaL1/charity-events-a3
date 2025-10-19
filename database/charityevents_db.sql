@@ -123,15 +123,14 @@ DROP TABLE IF EXISTS `registrations`;
 CREATE TABLE `registrations` (
   `id` int NOT NULL AUTO_INCREMENT,
   `event_id` int NOT NULL,
-  `user_name` varchar(120) NOT NULL,
-  `contact_email` varchar(160) NOT NULL,
+  `user_name` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `contact_email` varchar(160) COLLATE utf8mb4_unicode_ci NOT NULL,
   `num_tickets` int NOT NULL DEFAULT '1',
   `registration_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `fk_reg_event` (`event_id`),
-  CONSTRAINT `fk_reg_event` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `chk_tickets` CHECK ((`num_tickets` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `idx_reg_event` (`event_id`),
+  CONSTRAINT `fk_reg_event` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -140,7 +139,7 @@ CREATE TABLE `registrations` (
 
 LOCK TABLES `registrations` WRITE;
 /*!40000 ALTER TABLE `registrations` DISABLE KEYS */;
-INSERT INTO `registrations` VALUES (1,1,'Shimin Jin','Shimin@example.com',1,'2025-10-18 20:17:34'),(2,2,'Lehan Zhang','Lehan@example.com',1,'2025-10-18 20:17:34'),(3,3,'Kejia Li','Kejia@example.com',2,'2025-10-18 20:17:34');
+INSERT INTO `registrations` VALUES (1,1,'Alice','alice@example.com',1,'2025-10-20 02:06:33'),(2,2,'Bob','bob@example.com',2,'2025-10-20 02:06:33');
 /*!40000 ALTER TABLE `registrations` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -153,4 +152,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-20  1:27:09
+-- Dump completed on 2025-10-20  2:07:56
