@@ -4,10 +4,11 @@ import { EventFormComponent } from './components/event-form/event-form';
 import { EventDetailComponent } from './components/event-detail/event-detail';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/events', pathMatch: 'full' },
+  { path: '', redirectTo: 'events', pathMatch: 'full' },
   { path: 'events', component: EventListComponent },
   { path: 'events/new', component: EventFormComponent },
-  { path: 'events/edit/:id', component: EventFormComponent },
   { path: 'events/:id', component: EventDetailComponent },
-  { path: '**', redirectTo: '/events' }
+  { path: 'events/:id/edit', component: EventFormComponent },
+  // 添加通配符路由处理404
+  { path: '**', redirectTo: 'events' }
 ];
