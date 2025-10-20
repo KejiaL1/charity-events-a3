@@ -1,40 +1,95 @@
-<section class="card">
+<section class="card form-card">
   <div class="pad">
     <h1>Event Registration</h1>
 
-    <div *ngIf="ev" class="meta" style="margin-bottom: 10px;">
-      <strong>{{ev.title}}</strong><br>
-      {{ev.city}} {{ev.state}} · {{ev.start_datetime | dateTime}} — {{ev.end_datetime | dateTime}}<br>
-      Ticket: {{ev.ticket_price_cents | price:ev.is_free}}
+    <div *ngIf="ev" class="meta event-head">
+      <strong>{{ ev.title }}</strong><br />
+      {{ ev.city }} {{ ev.state }} · {{ ev.start_datetime | dateTime }} — {{ ev.end_datetime | dateTime }}<br />
+      <span class="price-line">Ticket: <span class="price">{{ ev.ticket_price_cents | price: ev.is_free }}</span></span>
     </div>
 
-    <form (ngSubmit)="submit()" class="form" novalidate>
-      <label>
-        Full Name
-        <input name="user_name" [(ngModel)]="form.user_name" required maxlength="120">
-      </label>
-      <label>
-        Email
-        <input name="contact_email" [(ngModel)]="form.contact_email" type="email" required maxlength="160">
-      </label>
-      <label>
-        Tickets
-        <input name="num_tickets" [(ngModel)]="form.num_tickets" type="number" min="1">
-      </label>
-      <label class="full">
-        Notes (optional)
-        <textarea name="notes" [(ngModel)]="form.notes" rows="4" placeholder="Any special requirements..."></textarea>
-      </label>
+    <form (ngSubmit)="submit()" class="form-grid" novalidate #regForm="ngForm">
+      <div class="field">
+        <label for="user_name">Full Name <span class="req">*</span></label>
+        <input
+          id="user_name"
+          name="user_name"
+          class="tall-input"
+          [(ngModel)]="form.user_name"
+          required
+          maxlength="120"
+          #userNameModel="ngModel"
+          [class.invalid]="userNameModel.invalid && (userNameModel.dirty || regForm.submitted)"
+          placeholder="Enter your name"
+        />
+        <small class="tip" *ngIf="userNameModel.invalid && (userNameModel.dirty || regForm.submitted)">
+          Please enter your name.
+        </small>
+      </div>
 
-      <div class="full">
+      <div class="field">
+        <label for="contact_email">Email <span class="req">*</span></label>
+        <input
+          id="contact_email"
+          name="contact_email"
+          type="email"
+          [(ngModel)]="form.contact_email"
+          required
+          maxlength="160"
+          #emailModel="ngModel"
+          [class.invalid]="emailModel.invalid && (emailModel.dirty || regForm.submitted)"
+          placeholder="you@example.com"
+        />
+        <small class="tip" *ngIf="emailModel.errors?.['required'] && (emailModel.dirty || regForm.submitted)">
+          Email is required.
+        </small>
+        <small class="tip" *ngIf="emailModel.errors?.['email'] && (emailModel.dirty || regForm.submitted)">
+          Please enter a valid email.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="num_tickets">Tickets <span class="req">*</span></label>
+        <input
+          id="num_tickets"
+          name="num_tickets"
+          type="number"
+          min="1"
+          required
+          [(ngModel)]="form.num_tickets"
+          #ticketsModel="ngModel"
+          [class.invalid]="ticketsModel.invalid && (ticketsModel.dirty || regForm.submitted)"
+          placeholder="1"
+        />
+        <small class="tip" *ngIf="ticketsModel.errors?.['required'] && (ticketsModel.dirty || regForm.submitted)">
+          Please select ticket count.
+        </small>
+        <small class="tip" *ngIf="ticketsModel.errors?.['min'] && (ticketsModel.dirty || regForm.submitted)">
+          Minimum is 1 ticket.
+        </small>
+      </div>
+
+      <div class="field col-2">
+        <label for="notes">Notes (optional)</label>
+        <textarea
+          id="notes"
+          name="notes"
+          class="fixed-textarea"
+          rows="4"
+          [(ngModel)]="form.notes"
+          placeholder="Any special requirements..."
+        ></textarea>
+      </div>
+
+      <div class="actions col-2">
         <a class="btn ghost" [routerLink]="['/event', ev?.id]">Back</a>
-        <button class="btn" type="submit" [disabled]="submitting">
+        <button class="btn primary" type="submit" [disabled]="submitting">
           {{ submitting ? 'Submitting...' : 'Submit Registration' }}
         </button>
       </div>
 
       <p class="alert success" *ngIf="success">Registration submitted successfully!</p>
-      <p class="alert error" *ngIf="error">{{error}}</p>
+      <p class="alert error" *ngIf="error">{{ error }}</p>
     </form>
   </div>
 </section>

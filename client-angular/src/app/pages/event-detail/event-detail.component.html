@@ -35,9 +35,50 @@
     <p>{{ev.org_about || '(None available)'}} </p>
     <p>Contact: {{ev.contact_email || '(None available)'}} </p>
 
+    <h3 style="margin-top:20px">Registrations</h3>
+    <p class="meta" *ngIf="regsLoading">Loading registrations...</p>
+
+    <ng-container *ngIf="!regsLoading">
+      <p class="meta" *ngIf="!regs?.length">No registrations yet.</p>
+
+      <div *ngIf="regs?.length" class="table-wrap">
+        <div class="regs-summary">
+          <span>Total records: <strong>{{ totalRegs }}</strong></span>
+          <span>Total tickets: <strong>{{ totalTickets }}</strong></span>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>User</th>
+              <th>Email</th>
+              <th>Tickets</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of regs">
+              <td>{{ r.id }}</td>
+              <td>{{ r.user_name }}</td>
+              <td>{{ r.contact_email }}</td>
+              <td>{{ r.num_tickets }}</td>
+              <td>{{ r.registration_date | date:'yyyy-MM-dd HH:mm' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
     <p style="margin-top: 12px;">
       <a class="btn ghost" routerLink="/search">Back to Search</a>
-      <a class="btn" [routerLink]="['/register', ev.id]">Register →</a>
+      <a
+        class="btn"
+        [class.disabled]="ev.end_datetime | isEnded"
+        [routerLink]="(ev.end_datetime | isEnded) ? null : ['/register', ev.id]"
+      >
+        {{ (ev.end_datetime | isEnded) ? 'Registration Closed' : 'Register →' }}
+      </a>
     </p>
   </div>
 </article>
