@@ -9,7 +9,7 @@ import { Registration } from '../models/registration';
 })
 export class EventService {
   // 确保API地址正确 - 根据你的后端调整
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = 'http://localhost:3001/api';
 
   constructor(private http: HttpClient) {
     console.log('EventService initialized, API URL:', this.apiUrl);
