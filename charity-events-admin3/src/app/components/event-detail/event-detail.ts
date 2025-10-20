@@ -38,7 +38,7 @@ export class EventDetailComponent implements OnInit {
           this.loadRegistrations(id);
         },
         error: (error) => {
-          this.error = '加载活动详情失败';
+          this.error = 'Failed to load event details';
           this.loading = false;
           console.error('Error loading event:', error);
         }
@@ -70,16 +70,16 @@ export class EventDetailComponent implements OnInit {
   }
 
   deleteEvent(): void {
-    if (this.event && confirm('确定要删除这个活动吗？此操作不可撤销。')) {
+    if (this.event && confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
       this.eventService.deleteEvent(this.event.id).subscribe({
         next: () => {
           this.router.navigate(['/events']);
         },
         error: (error) => {
           if (error.status === 409) {
-            alert('无法删除活动：' + error.error.message);
+            alert('Cannot delete event: ' + error.error.message);
           } else {
-            alert('删除活动失败');
+            alert('Failed to delete event');
           }
           console.error('Error deleting event:', error);
         }

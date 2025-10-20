@@ -9,6 +9,5 @@ export const routes: Routes = [
   { path: 'events/new', component: EventFormComponent },
   { path: 'events/:id', component: EventDetailComponent },
   { path: 'events/:id/edit', component: EventFormComponent },
-  // 添加通配符路由处理404
   { path: '**', redirectTo: 'events' }
 ];

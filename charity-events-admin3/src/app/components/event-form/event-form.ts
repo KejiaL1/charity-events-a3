@@ -29,7 +29,7 @@ export class EventFormComponent implements OnInit {
   ngOnInit(): void {
     console.log('EventFormComponent initialized');
     
-    // 获取路由参数
+    // Get route parameters
     this.route.paramMap.subscribe(params => {
       this.eventId = Number(params.get('id'));
       this.isEditMode = !!this.eventId && this.router.url.includes('edit');
@@ -50,7 +50,7 @@ export class EventFormComponent implements OnInit {
       description: ['', Validators.required],
       purpose: [''],
       venue: [''],
-      // 移除 city 和 state 字段，因为它们现在是固定的
+      // Remove city and state fields as they are now fixed
       start_datetime: ['', Validators.required],
       end_datetime: ['', Validators.required],
       ticket_price_cents: [0, [Validators.min(0)]],
@@ -76,7 +76,7 @@ export class EventFormComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading event:', error);
-        this.error = '加载活动数据失败';
+        this.error = 'Failed to load event data';
         this.loading = false;
       }
     });
@@ -97,12 +97,12 @@ export class EventFormComponent implements OnInit {
       const formValue = this.eventForm.value;
       console.log('Form data:', formValue);
 
-      // 确保数字字段是数字类型
+      // Ensure numeric fields are number type
       const processedData = {
         ...formValue,
         ticket_price_cents: Number(formValue.ticket_price_cents) || 0,
         target_amount_cents: Number(formValue.target_amount_cents) || 0,
-        // 确保布尔值是布尔类型
+        // Ensure boolean is boolean type
         is_free: Boolean(formValue.is_free)
       };
 
@@ -115,7 +115,7 @@ export class EventFormComponent implements OnInit {
           },
           error: (error) => {
             console.error('Update error:', error);
-            this.error = '更新活动失败，请重试';
+            this.error = 'Failed to update event, please try again';
             this.loading = false;
           }
         });
@@ -128,14 +128,14 @@ export class EventFormComponent implements OnInit {
           },
           error: (error) => {
             console.error('Create error:', error);
-            this.error = '创建活动失败，请重试';
+            this.error = 'Failed to create event, please try again';
             this.loading = false;
           }
         });
       }
     } else {
       console.log('Form is invalid');
-      // 标记所有字段为 touched 以显示验证错误
+      // Mark all fields as touched to show validation errors
       Object.keys(this.eventForm.controls).forEach(key => {
         const control = this.eventForm.get(key);
         control?.markAsTouched();

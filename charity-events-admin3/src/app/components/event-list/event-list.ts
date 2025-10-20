@@ -32,17 +32,17 @@ export class EventListComponent implements OnInit {
     this.eventService.getEvents().subscribe({
       next: (response) => {
         console.log('Events loaded successfully:', response);
-        // 处理不同的响应格式
+        // Handle different response formats
         this.events = response.events || response || [];
         this.loading = false;
       },
       error: (error) => {
         console.error('Error loading events:', error);
-        this.error = '加载活动列表失败,请检查网络连接或API服务';
+        this.error = 'Failed to load event list. Please check network connection or API service';
         this.loading = false;
-        this.events = []; // 清空列表
+        this.events = []; // Clear the list
         
-        // 如果是开发环境，显示模拟数据
+        // Show mock data if in development environment
         if (this.isDevelopment()) {
           this.showMockData();
         }
@@ -59,14 +59,14 @@ export class EventListComponent implements OnInit {
     this.events = [
       {
         id: 1,
-        title: '示例活动 1',
+        title: 'Sample Event 1',
         category_id: 1,
         org_id: 1,
-        description: '这是一个示例活动',
-        purpose: '慈善目的',
-        venue: '示例场地',
-        city: '北京',
-        state: '北京',
+        description: 'This is a sample event',
+        purpose: 'Charitable Purpose',
+        venue: 'Sample Venue',
+        city: 'Beijing',
+        state: 'Beijing',
         start_datetime: '2024-01-01T10:00:00',
         end_datetime: '2024-01-01T18:00:00',
         ticket_price_cents: 0,
@@ -75,21 +75,21 @@ export class EventListComponent implements OnInit {
         raised_amount_cents: 0,
         status: 'upcoming',
         hero_image_url: '',
-        latitude: -33.8688,      // 添加经纬度
-        longitude: 151.2093,     // 添加经纬度
-        category_name: '慈善活动',
-        org_name: '示例组织'
+        latitude: -33.8688,      // Add latitude and longitude
+        longitude: 151.2093,     // Add latitude and longitude
+        category_name: 'Charity Event',
+        org_name: 'Sample Organization'
       },
       {
         id: 2,
-        title: '示例活动 2',
+        title: 'Sample Event 2',
         category_id: 2,
         org_id: 2,
-        description: '另一个示例活动',
-        purpose: '筹集资金',
-        venue: '另一个场地',
-        city: '上海',
-        state: '上海',
+        description: 'Another sample event',
+        purpose: 'Fundraising',
+        venue: 'Another Venue',
+        city: 'Shanghai',
+        state: 'Shanghai',
         start_datetime: '2024-01-02T10:00:00',
         end_datetime: '2024-01-02T18:00:00',
         ticket_price_cents: 1000,
@@ -98,10 +98,10 @@ export class EventListComponent implements OnInit {
         raised_amount_cents: 50000,
         status: 'upcoming',
         hero_image_url: '',
-        latitude: -33.8688,      // 添加经纬度
-        longitude: 151.2093,     // 添加经纬度
-        category_name: '筹款活动',
-        org_name: '另一个组织'
+        latitude: -33.8688,      // Add latitude and longitude
+        longitude: 151.2093,     // Add latitude and longitude
+        category_name: 'Fundraising Event',
+        org_name: 'Another Organization'
       }
     ];
     this.loading = false;
@@ -119,7 +119,7 @@ export class EventListComponent implements OnInit {
 
   deleteEvent(id: number): void {
     console.log('Attempting to delete event:', id);
-    if (confirm('确定要删除这个活动吗？此操作不可撤销。')) {
+    if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
       this.eventService.deleteEvent(id).subscribe({
         next: () => {
           console.log('Event deleted successfully');
@@ -128,9 +128,9 @@ export class EventListComponent implements OnInit {
         error: (error) => {
           console.error('Delete error:', error);
           if (error.status === 409) {
-            alert('无法删除活动：' + error.error.message);
+            alert('Unable to delete event: ' + error.error.message);
           } else {
-            alert('删除活动失败，请重试');
+            alert('Failed to delete event. Please try again');
           }
         }
       });
