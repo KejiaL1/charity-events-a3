@@ -50,14 +50,14 @@ export class EventFormComponent implements OnInit {
       description: ['', Validators.required],
       purpose: [''],
       venue: [''],
-      city: ['', Validators.required],
-      state: ['', Validators.required],
+      // 移除 city 和 state 字段，因为它们现在是固定的
       start_datetime: ['', Validators.required],
       end_datetime: ['', Validators.required],
-      ticket_price_cents: [0],
+      ticket_price_cents: [0, [Validators.min(0)]],
       is_free: [false],
-      target_amount_cents: [0],
-      status: ['upcoming', Validators.required]
+      target_amount_cents: [0, [Validators.min(0)]],
+      status: ['upcoming', Validators.required],
+      hero_image_url: ['']
     });
   }
 
@@ -97,9 +97,18 @@ export class EventFormComponent implements OnInit {
       const formValue = this.eventForm.value;
       console.log('Form data:', formValue);
 
+      // 确保数字字段是数字类型
+      const processedData = {
+        ...formValue,
+        ticket_price_cents: Number(formValue.ticket_price_cents) || 0,
+        target_amount_cents: Number(formValue.target_amount_cents) || 0,
+        // 确保布尔值是布尔类型
+        is_free: Boolean(formValue.is_free)
+      };
+
       if (this.isEditMode && this.eventId) {
         console.log('Updating event:', this.eventId);
-        this.eventService.updateEvent(this.eventId, formValue).subscribe({
+        this.eventService.updateEvent(this.eventId, processedData).subscribe({
           next: () => {
             console.log('Event updated successfully');
             this.router.navigate(['/events']);
@@ -112,7 +121,7 @@ export class EventFormComponent implements OnInit {
         });
       } else {
         console.log('Creating new event');
-        this.eventService.createEvent(formValue).subscribe({
+        this.eventService.createEvent(processedData).subscribe({
           next: () => {
             console.log('Event created successfully');
             this.router.navigate(['/events']);

@@ -75,6 +75,8 @@ export class EventListComponent implements OnInit {
         raised_amount_cents: 0,
         status: 'upcoming',
         hero_image_url: '',
+        latitude: -33.8688,      // 添加经纬度
+        longitude: 151.2093,     // 添加经纬度
         category_name: '慈善活动',
         org_name: '示例组织'
       },
@@ -96,6 +98,8 @@ export class EventListComponent implements OnInit {
         raised_amount_cents: 50000,
         status: 'upcoming',
         hero_image_url: '',
+        latitude: -33.8688,      // 添加经纬度
+        longitude: 151.2093,     // 添加经纬度
         category_name: '筹款活动',
         org_name: '另一个组织'
       }

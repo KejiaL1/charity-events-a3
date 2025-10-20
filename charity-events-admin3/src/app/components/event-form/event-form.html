@@ -59,26 +59,18 @@
           </div>
         </div>
 
-        <!-- 城市 -->
+        <!-- 固定城市信息显示 -->
         <div class="mb-3">
-          <label for="city" class="form-label">城市 *</label>
-          <input type="text" id="city" formControlName="city" class="form-control"
-                 [class.is-invalid]="eventForm.get('city')?.touched && eventForm.get('city')?.invalid"
-                 placeholder="请输入城市">
-          <div *ngIf="eventForm.get('city')?.touched && eventForm.get('city')?.invalid" class="invalid-feedback">
-            城市为必填项
-          </div>
+          <label class="form-label">城市</label>
+          <input type="text" class="form-control" value="Sydney, NSW" disabled>
+          <small class="form-text text-muted">当前服务城市固定为悉尼</small>
         </div>
 
-        <!-- 州/省 -->
+        <!-- 场地 -->
         <div class="mb-3">
-          <label for="state" class="form-label">州/省 *</label>
-          <input type="text" id="state" formControlName="state" class="form-control"
-                 [class.is-invalid]="eventForm.get('state')?.touched && eventForm.get('state')?.invalid"
-                 placeholder="请输入州/省">
-          <div *ngIf="eventForm.get('state')?.touched && eventForm.get('state')?.invalid" class="invalid-feedback">
-            州/省为必填项
-          </div>
+          <label for="venue" class="form-label">场地</label>
+          <input type="text" id="venue" formControlName="venue" class="form-control"
+                 placeholder="请输入活动场地">
         </div>
 
         <!-- 开始时间 -->
@@ -121,7 +113,7 @@
         <div class="mb-3">
           <label for="ticket_price_cents" class="form-label">门票价格（分）</label>
           <input type="number" id="ticket_price_cents" formControlName="ticket_price_cents" class="form-control" 
-                 placeholder="0">
+                 placeholder="0" min="0">
         </div>
 
         <!-- 免费活动 -->
@@ -134,14 +126,14 @@
         <div class="mb-3">
           <label for="target_amount_cents" class="form-label">目标金额（分）</label>
           <input type="number" id="target_amount_cents" formControlName="target_amount_cents" class="form-control"
-                 placeholder="0">
+                 placeholder="0" min="0">
         </div>
 
-        <!-- 场地 -->
+        <!-- 图片URL -->
         <div class="mb-3">
-          <label for="venue" class="form-label">场地</label>
-          <input type="text" id="venue" formControlName="venue" class="form-control"
-                 placeholder="请输入活动场地">
+          <label for="hero_image_url" class="form-label">活动图片URL</label>
+          <input type="text" id="hero_image_url" formControlName="hero_image_url" class="form-control"
+                 placeholder="请输入图片URL">
         </div>
       </div>
     </div>

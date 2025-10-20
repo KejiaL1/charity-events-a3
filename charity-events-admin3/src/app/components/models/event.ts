@@ -16,6 +16,8 @@ export interface Event {
   raised_amount_cents: number;
   status: 'upcoming' | 'past' | 'paused';
   hero_image_url: string;
+  latitude: number;  // 确保这里是 number 类型
+  longitude: number; // 确保这里是 number 类型
   category_name?: string;
   org_name?: string;
   total_registrations?: number;

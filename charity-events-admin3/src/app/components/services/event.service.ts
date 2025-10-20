@@ -8,8 +8,13 @@ import { Registration } from '../models/registration';
   providedIn: 'root'
 })
 export class EventService {
-  // 确保API地址正确 - 根据你的后端调整
-  private apiUrl = 'http://localhost:3001/api';
+  private apiUrl = 'http://localhost:3000/api';
+
+  // 悉尼的固定经纬度
+  private readonly defaultCoordinates = {
+    latitude: -33.8688,
+    longitude: 151.2093
+  };
 
   constructor(private http: HttpClient) {
     console.log('EventService initialized, API URL:', this.apiUrl);
@@ -36,9 +41,24 @@ export class EventService {
     );
   }
 
-  createEvent(event: Partial<Event>): Observable<Event> {
-    console.log('Creating event:', event);
-    return this.http.post<Event>(`${this.apiUrl}/events`, event).pipe(
+  createEvent(eventData: Partial<Event>): Observable<Event> {
+    // 添加默认值
+    const eventWithDefaults = {
+      ...eventData,
+      // 设置固定城市信息
+      city: 'Sydney',
+      state: 'NSW',
+      // 设置固定经纬度
+      latitude: this.defaultCoordinates.latitude,
+      longitude: this.defaultCoordinates.longitude,
+      // 设置默认筹款金额为0
+      raised_amount_cents: 0,
+      // 设置默认图片URL
+      hero_image_url: eventData.hero_image_url || 'assets/img/default_event.jpg'
+    };
+
+    console.log('Creating event with data:', eventWithDefaults);
+    return this.http.post<Event>(`${this.apiUrl}/events`, eventWithDefaults).pipe(
       tap(newEvent => console.log('Event created:', newEvent)),
       catchError(error => {
         console.error('Error creating event:', error);
@@ -47,8 +67,10 @@ export class EventService {
     );
   }
 
-  updateEvent(id: number, event: Partial<Event>): Observable<Event> {
-    return this.http.put<Event>(`${this.apiUrl}/events/${id}`, event).pipe(
+  updateEvent(id: number, eventData: Partial<Event>): Observable<Event> {
+    console.log('Updating event:', id, 'with data:', eventData);
+    return this.http.put<Event>(`${this.apiUrl}/events/${id}`, eventData).pipe(
+      tap(updatedEvent => console.log('Event updated:', updatedEvent)),
       catchError(error => {
         console.error('Error updating event:', error);
         throw error;
