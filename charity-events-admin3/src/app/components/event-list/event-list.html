@@ -1,0 +1,55 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>活动列表</h2>
+    <button class="btn btn-primary" routerLink="/events/new">创建新活动</button>
+  </div>
+
+  <div *ngIf="loading" class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">加载中...</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && events.length === 0" class="alert alert-info">
+    没有找到任何活动
+  </div>
+
+  <table class="table table-striped" *ngIf="!loading && events.length > 0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>活动名称</th>
+        <th>日期</th>
+        <th>城市</th>
+        <th>状态</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let event of events">
+        <td>{{ event.id }}</td>
+        <td>{{ event.title }}</td>
+        <td>{{ event.start_datetime | date:'yyyy-MM-dd' }}</td>
+        <td>{{ event.city }}</td>
+        <td>
+          <span class="badge" [ngClass]="{
+            'bg-success': event.status === 'upcoming',
+            'bg-secondary': event.status === 'paused',
+            'bg-info': event.status === 'past'
+          }">
+            {{ event.status === 'upcoming' ? '进行中' : event.status === 'paused' ? '已暂停' : '已结束' }}
+          </span>
+        </td>
+        <td>
+          <button class="btn btn-sm btn-info me-1" (click)="viewEvent(event.id)">查看</button>
+          <button class="btn btn-sm btn-warning me-1" (click)="editEvent(event.id)">编辑</button>
+          <button class="btn btn-sm btn-danger" (click)="deleteEvent(event.id)">删除</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

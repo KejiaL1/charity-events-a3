@@ -1,6 +1,6 @@
 // api/routes/registrations.js
-import { Router } from 'express';
-import { pool as db } from '../db.js';
+const { Router } = require('express');
+const { pool: db } = require('../db');
 
 const router = Router();
 
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
     // Validate sort parameters
     const validSortFields = ['id', 'user_name', 'contact_email', 'registration_date', 'num_tickets'];
     const sortField = validSortFields.includes(sort_by) ? sort_by : 'registration_date';
-    const sortDirection = sort_order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    const sortDirection = String(sort_order).toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     // Build base SQL query
     let sql = `
@@ -53,8 +53,8 @@ router.get('/', async (req, res) => {
     // Get total count for pagination
     const countSql = `SELECT COUNT(*) as total FROM (${sql}) as filtered_registrations`;
     const [countResult] = await db.query(countSql, params);
-    const totalRegistrations = countResult[0].total;
-    const totalPages = Math.ceil(totalRegistrations / limitNum);
+    const total = countResult[0].total;
+    const totalPages = Math.ceil(total / limitNum);
 
     // Add sorting and pagination
     sql += ` ORDER BY r.${sortField} ${sortDirection} LIMIT ? OFFSET ?`;
@@ -64,19 +64,19 @@ router.get('/', async (req, res) => {
     const [rows] = await db.query(sql, params);
 
     // Calculate summary statistics
-    const totalTickets = rows.reduce((sum, reg) => sum + reg.num_tickets, 0);
+    const totalTickets = rows.reduce((s, r) => s + r.num_tickets, 0);
 
     res.json({
       registrations: rows,
       summary: {
-        total_registrations: totalRegistrations,
+        total_registrations: total,
         total_tickets: totalTickets,
-        average_tickets_per_registration: totalRegistrations > 0 ? (totalTickets / totalRegistrations).toFixed(2) : 0
+        average_tickets_per_registration: total > 0 ? (totalTickets / total).toFixed(2) : 0
       },
       pagination: {
         current_page: pageNum,
         total_pages: totalPages,
-        total_registrations: totalRegistrations,
+        total_registrations: total,
         has_next: pageNum < totalPages,
         has_prev: pageNum > 1,
         page_size: limitNum
@@ -85,10 +85,7 @@ router.get('/', async (req, res) => {
 
   } catch (err) {
     console.error('GET /registrations error:', err);
-    res.status(500).json({ 
-      error: 'DATABASE_ERROR', 
-      message: err.message 
-    });
+    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
   }
 });
 
@@ -509,4 +506,4 @@ router.get('/stats/summary', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

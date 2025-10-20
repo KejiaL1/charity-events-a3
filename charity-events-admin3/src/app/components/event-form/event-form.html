@@ -1,0 +1,167 @@
+<div class="container mt-4">
+  <h2>{{ isEditMode ? '编辑活动' : '创建新活动' }}</h2>
+
+  <div *ngIf="loading" class="text-center mt-5">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">加载中...</span>
+    </div>
+    <p class="mt-2">正在{{ isEditMode ? '更新' : '创建' }}活动...</p>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    {{ error }}
+  </div>
+
+  <form [formGroup]="eventForm" (ngSubmit)="onSubmit()" *ngIf="!loading" aria-labelledby="form-title">
+    <h3 id="form-title" class="visually-hidden">{{ isEditMode ? '编辑活动表单' : '创建活动表单' }}</h3>
+    
+    <div class="row">
+      <div class="col-md-6">
+        <!-- 活动名称 -->
+        <div class="mb-3">
+          <label for="title" class="form-label">活动名称 *</label>
+          <input type="text" id="title" formControlName="title" class="form-control"
+                 [class.is-invalid]="eventForm.get('title')?.touched && eventForm.get('title')?.invalid"
+                 placeholder="请输入活动名称">
+          <div *ngIf="eventForm.get('title')?.touched && eventForm.get('title')?.invalid" class="invalid-feedback">
+            活动名称为必填项
+          </div>
+        </div>
+
+        <!-- 分类 -->
+        <div class="mb-3">
+          <label for="category_id" class="form-label">分类 *</label>
+          <select id="category_id" formControlName="category_id" class="form-control"
+                  [class.is-invalid]="eventForm.get('category_id')?.touched && eventForm.get('category_id')?.invalid">
+            <option value="">选择分类</option>
+            <option value="1">Fun Run</option>
+            <option value="2">Gala Dinner</option>
+            <option value="3">Charity Auction</option>
+            <option value="4">Blood Drive</option>
+          </select>
+          <div *ngIf="eventForm.get('category_id')?.touched && eventForm.get('category_id')?.invalid" class="invalid-feedback">
+            分类为必填项
+          </div>
+        </div>
+
+        <!-- 组织 -->
+        <div class="mb-3">
+          <label for="org_id" class="form-label">组织 *</label>
+          <select id="org_id" formControlName="org_id" class="form-control"
+                  [class.is-invalid]="eventForm.get('org_id')?.touched && eventForm.get('org_id')?.invalid">
+            <option value="">选择组织</option>
+            <option value="1">Hope Foundation</option>
+            <option value="2">Green Earth</option>
+            <option value="3">Care&Share</option>
+          </select>
+          <div *ngIf="eventForm.get('org_id')?.touched && eventForm.get('org_id')?.invalid" class="invalid-feedback">
+            组织为必填项
+          </div>
+        </div>
+
+        <!-- 固定城市信息显示 -->
+        <div class="mb-3">
+          <label class="form-label">城市</label>
+          <input type="text" class="form-control" value="Sydney, NSW" disabled>
+          <small class="form-text text-muted">当前服务城市固定为悉尼</small>
+        </div>
+
+        <!-- 场地 -->
+        <div class="mb-3">
+          <label for="venue" class="form-label">场地</label>
+          <input type="text" id="venue" formControlName="venue" class="form-control"
+                 placeholder="请输入活动场地">
+        </div>
+
+        <!-- 开始时间 -->
+        <div class="mb-3">
+          <label for="start_datetime" class="form-label">开始时间 *</label>
+          <input type="datetime-local" id="start_datetime" formControlName="start_datetime" class="form-control"
+                 [class.is-invalid]="eventForm.get('start_datetime')?.touched && eventForm.get('start_datetime')?.invalid">
+          <div *ngIf="eventForm.get('start_datetime')?.touched && eventForm.get('start_datetime')?.invalid" class="invalid-feedback">
+            开始时间为必填项
+          </div>
+        </div>
+
+        <!-- 结束时间 -->
+        <div class="mb-3">
+          <label for="end_datetime" class="form-label">结束时间 *</label>
+          <input type="datetime-local" id="end_datetime" formControlName="end_datetime" class="form-control"
+                 [class.is-invalid]="eventForm.get('end_datetime')?.touched && eventForm.get('end_datetime')?.invalid">
+          <div *ngIf="eventForm.get('end_datetime')?.touched && eventForm.get('end_datetime')?.invalid" class="invalid-feedback">
+            结束时间为必填项
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <!-- 状态 -->
+        <div class="mb-3">
+          <label for="status" class="form-label">状态 *</label>
+          <select id="status" formControlName="status" class="form-control"
+                  [class.is-invalid]="eventForm.get('status')?.touched && eventForm.get('status')?.invalid">
+            <option value="upcoming">进行中</option>
+            <option value="paused">已暂停</option>
+            <option value="past">已结束</option>
+          </select>
+          <div *ngIf="eventForm.get('status')?.touched && eventForm.get('status')?.invalid" class="invalid-feedback">
+            状态为必填项
+          </div>
+        </div>
+
+        <!-- 门票价格 -->
+        <div class="mb-3">
+          <label for="ticket_price_cents" class="form-label">门票价格（分）</label>
+          <input type="number" id="ticket_price_cents" formControlName="ticket_price_cents" class="form-control" 
+                 placeholder="0" min="0">
+        </div>
+
+        <!-- 免费活动 -->
+        <div class="mb-3 form-check">
+          <input type="checkbox" id="is_free" formControlName="is_free" class="form-check-input">
+          <label for="is_free" class="form-check-label">免费活动</label>
+        </div>
+
+        <!-- 目标金额 -->
+        <div class="mb-3">
+          <label for="target_amount_cents" class="form-label">目标金额（分）</label>
+          <input type="number" id="target_amount_cents" formControlName="target_amount_cents" class="form-control"
+                 placeholder="0" min="0">
+        </div>
+
+        <!-- 图片URL -->
+        <div class="mb-3">
+          <label for="hero_image_url" class="form-label">活动图片URL</label>
+          <input type="text" id="hero_image_url" formControlName="hero_image_url" class="form-control"
+                 placeholder="请输入图片URL">
+        </div>
+      </div>
+    </div>
+
+    <!-- 活动描述 -->
+    <div class="mb-3">
+      <label for="description" class="form-label">活动描述 *</label>
+      <textarea id="description" formControlName="description" class="form-control" rows="3"
+                [class.is-invalid]="eventForm.get('description')?.touched && eventForm.get('description')?.invalid"
+                placeholder="请详细描述活动内容"></textarea>
+      <div *ngIf="eventForm.get('description')?.touched && eventForm.get('description')?.invalid" class="invalid-feedback">
+        活动描述为必填项
+      </div>
+    </div>
+
+    <!-- 活动目的 -->
+    <div class="mb-3">
+      <label for="purpose" class="form-label">活动目的</label>
+      <textarea id="purpose" formControlName="purpose" class="form-control" rows="2"
+                placeholder="请描述活动的目的和意义"></textarea>
+    </div>
+
+    <div class="mt-4">
+      <button type="submit" class="btn btn-primary me-2" [disabled]="loading">
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+        {{ isEditMode ? '更新' : '创建' }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="cancel()" [disabled]="loading">取消</button>
+    </div>
+  </form>
+</div>

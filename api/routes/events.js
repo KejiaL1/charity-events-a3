@@ -1,43 +1,29 @@
-import { Router } from 'express';
-import { pool } from '../db.js';
+const { Router } = require('express');
+const { pool } = require('../db');
 
 const router = Router();
 
-// GET /api/events - Get all events with optional filtering and pagination
+// GET /api/events
 router.get('/', async (req, res) => {
   try {
     let { 
-      date, 
-      city, 
-      categoryId, 
-      search, 
-      page = 1, 
-      limit = 10,
-      status,
-      organizationId 
+      date, city, categoryId, search, page = 1, limit = 10, status, organizationId 
     } = req.query;
 
-    // Parse and validate pagination parameters
     const pageNum = Math.max(1, Number.parseInt(page, 10));
     const limitNum = Math.min(50, Math.max(1, Number.parseInt(limit, 10)));
     const offset = (pageNum - 1) * limitNum;
 
-    // Parse and validate other parameters
     const catId = Number.parseInt(categoryId, 10);
     const hasValidCatId = Number.isInteger(catId) && catId > 0;
-    
     const orgId = Number.parseInt(organizationId, 10);
     const hasValidOrgId = Number.isInteger(orgId) && orgId > 0;
-    
     const dateOk = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date);
     city = (typeof city === 'string' ? city.trim() : '');
     search = (typeof search === 'string' ? search.trim() : '');
-    
-    // Validate status parameter
     const validStatuses = ['upcoming', 'past', 'paused'];
     const statusOk = validStatuses.includes(status);
 
-    // Build SQL query with filtering
     let sql = `
       SELECT
         e.id, e.title, e.city, e.state,
@@ -55,49 +41,28 @@ router.get('/', async (req, res) => {
       LEFT JOIN organizations o ON e.org_id = o.id
       WHERE 1=1
     `;
-    
     const params = [];
-    
-    // Add filters
-    if (dateOk) { 
-      sql += ` AND DATE(e.start_datetime) = ?`; 
-      params.push(date); 
-    }
-    if (city) { 
-      sql += ` AND e.city LIKE ?`; 
-      params.push(`%${city}%`); 
-    }
-    if (hasValidCatId) { 
-      sql += ` AND e.category_id = ?`; 
-      params.push(catId); 
-    }
-    if (hasValidOrgId) { 
-      sql += ` AND e.org_id = ?`; 
-      params.push(orgId); 
-    }
-    if (statusOk) { 
-      sql += ` AND e.status = ?`; 
-      params.push(status); 
-    }
+
+    if (dateOk) { sql += ` AND DATE(e.start_datetime) = ?`; params.push(date); }
+    if (city) { sql += ` AND e.city LIKE ?`; params.push(`%${city}%`); }
+    if (hasValidCatId) { sql += ` AND e.category_id = ?`; params.push(catId); }
+    if (hasValidOrgId) { sql += ` AND e.org_id = ?`; params.push(orgId); }
+    if (statusOk) { sql += ` AND e.status = ?`; params.push(status); }
     if (search) { 
       sql += ` AND (e.title LIKE ? OR e.description LIKE ? OR e.purpose LIKE ?)`; 
       params.push(`%${search}%`, `%${search}%`, `%${search}%`); 
     }
 
-    // Get total count for pagination
     const countSql = `SELECT COUNT(*) as total FROM (${sql}) as filtered_events`;
     const [countResult] = await pool.query(countSql, params);
     const totalEvents = countResult[0].total;
     const totalPages = Math.ceil(totalEvents / limitNum);
 
-    // Add sorting and pagination to main query
     sql += ` ORDER BY e.start_datetime ASC LIMIT ? OFFSET ?`;
     params.push(limitNum, offset);
 
-    // Execute main query
     const [rows] = await pool.query(sql, params);
 
-    // Return response with pagination info
     res.json({
       events: rows,
       pagination: {
@@ -109,25 +74,18 @@ router.get('/', async (req, res) => {
         page_size: limitNum
       }
     });
-
   } catch (err) {
     console.error('GET /api/events error:', err);
-    res.status(500).json({ 
-      error: 'DATABASE_ERROR', 
-      message: err.message 
-    });
+    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
   }
 });
 
-// GET /api/events/:id - Get single event by ID
+// GET /api/events/:id
 router.get('/:id', async (req, res) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
     if (!Number.isInteger(id) || id <= 0) {
-      return res.status(400).json({ 
-        error: 'BAD_ID', 
-        message: 'id must be a positive integer' 
-      });
+      return res.status(400).json({ error: 'BAD_ID', message: 'id must be a positive integer' });
     }
 
     const [rows] = await pool.query(`
@@ -151,90 +109,55 @@ router.get('/:id', async (req, res) => {
     res.json(rows[0]);
   } catch (err) {
     console.error('GET /api/events/:id error:', err);
-    res.status(500).json({ 
-      error: 'DATABASE_ERROR', 
-      message: err.message 
-    });
+    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
   }
 });
 
-// GET /api/events/:id/registrations - Get all registrations for a specific event
+// GET /api/events/:id/registrations
 router.get('/:id/registrations', async (req, res) => {
   try {
     const eventId = Number.parseInt(req.params.id, 10);
-    
-    // Validate event ID
     if (!Number.isInteger(eventId) || eventId <= 0) {
-      return res.status(400).json({ 
-        error: 'INVALID_EVENT_ID', 
-        message: 'Event ID must be a positive integer' 
-      });
+      return res.status(400).json({ error: 'INVALID_EVENT_ID', message: 'Event ID must be a positive integer' });
     }
 
-    // Check if event exists
     const [eventCheck] = await pool.query('SELECT id FROM events WHERE id = ?', [eventId]);
     if (!eventCheck.length) {
-      return res.status(404).json({ 
-        error: 'EVENT_NOT_FOUND', 
-        message: 'Event not found' 
-      });
+      return res.status(404).json({ error: 'EVENT_NOT_FOUND', message: 'Event not found' });
     }
 
-    // Get registrations for the event, sorted by registration date (latest first)
     const [registrations] = await pool.query(`
       SELECT 
-        r.id,
-        r.user_name,
-        r.contact_email,
-        r.num_tickets,
-        r.registration_date
+        r.id, r.user_name, r.contact_email, r.num_tickets, r.registration_date
       FROM registrations r
       WHERE r.event_id = ?
       ORDER BY r.registration_date DESC
     `, [eventId]);
 
-    // Calculate total tickets for the event
     const totalTickets = registrations.reduce((sum, reg) => sum + reg.num_tickets, 0);
 
     res.json({
       event_id: eventId,
       total_registrations: registrations.length,
       total_tickets: totalTickets,
-      registrations: registrations
+      registrations
     });
-
   } catch (err) {
     console.error('GET /api/events/:id/registrations error:', err);
-    res.status(500).json({ 
-      error: 'DATABASE_ERROR', 
-      message: err.message 
-    });
+    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
   }
 });
 
-// POST /api/events - Create a new event
+// POST /api/events
 router.post('/', async (req, res) => {
   try {
     const {
-      title,
-      category_id,
-      org_id,
-      description,
-      purpose,
-      venue,
-      city,
-      state,
-      start_datetime,
-      end_datetime,
-      ticket_price_cents = 0,
-      is_free = false,
-      target_amount_cents = 0,
-      raised_amount_cents = 0,
-      status = 'upcoming',
-      hero_image_url = null
+      title, category_id, org_id, description, purpose, venue,
+      city, state, start_datetime, end_datetime, ticket_price_cents = 0,
+      is_free = false, target_amount_cents = 0, raised_amount_cents = 0,
+      status = 'upcoming', hero_image_url = null
     } = req.body;
 
-    // Validate required fields
     if (!title || !category_id || !org_id || !start_datetime || !end_datetime) {
       return res.status(400).json({
         error: 'MISSING_REQUIRED_FIELDS',
@@ -242,42 +165,21 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Validate category_id and org_id exist
     const [categoryCheck] = await pool.query('SELECT id FROM categories WHERE id = ?', [category_id]);
-    if (!categoryCheck.length) {
-      return res.status(400).json({ 
-        error: 'INVALID_CATEGORY', 
-        message: 'Category does not exist' 
-      });
-    }
+    if (!categoryCheck.length) return res.status(400).json({ error: 'INVALID_CATEGORY', message: 'Category does not exist' });
 
     const [orgCheck] = await pool.query('SELECT id FROM organizations WHERE id = ?', [org_id]);
-    if (!orgCheck.length) {
-      return res.status(400).json({ 
-        error: 'INVALID_ORGANIZATION', 
-        message: 'Organization does not exist' 
-      });
-    }
+    if (!orgCheck.length) return res.status(400).json({ error: 'INVALID_ORGANIZATION', message: 'Organization does not exist' });
 
-    // Validate datetime format and logic
     const startDate = new Date(start_datetime);
     const endDate = new Date(end_datetime);
-    
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return res.status(400).json({ 
-        error: 'INVALID_DATETIME', 
-        message: 'Invalid datetime format' 
-      });
+      return res.status(400).json({ error: 'INVALID_DATETIME', message: 'Invalid datetime format' });
     }
-
     if (startDate >= endDate) {
-      return res.status(400).json({ 
-        error: 'INVALID_DATETIME_RANGE', 
-        message: 'start_datetime must be before end_datetime' 
-      });
+      return res.status(400).json({ error: 'INVALID_DATETIME_RANGE', message: 'start_datetime must be before end_datetime' });
     }
 
-    // Insert new event
     const [result] = await pool.query(
       `INSERT INTO events (
         title, category_id, org_id, description, purpose, venue,
@@ -291,7 +193,6 @@ router.post('/', async (req, res) => {
       ]
     );
 
-    // Return the created event
     const [newEvent] = await pool.query(`
       SELECT e.*, c.name AS category_name, o.name AS org_name 
       FROM events e
@@ -303,98 +204,48 @@ router.post('/', async (req, res) => {
     res.status(201).json(newEvent[0]);
   } catch (err) {
     console.error('POST /api/events error:', err);
-    res.status(500).json({ 
-      error: 'DATABASE_ERROR', 
-      message: err.message 
-    });
+    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
   }
 });
 
-// PUT /api/events/:id - Update an existing event
+// PUT /api/events/:id
 router.put('/:id', async (req, res) => {
   try {
     const eventId = Number.parseInt(req.params.id, 10);
     if (!Number.isInteger(eventId) || eventId <= 0) {
-      return res.status(400).json({ 
-        error: 'BAD_ID', 
-        message: 'id must be a positive integer' 
-      });
+      return res.status(400).json({ error: 'BAD_ID', message: 'id must be a positive integer' });
     }
 
     const {
-      title,
-      category_id,
-      org_id,
-      description,
-      purpose,
-      venue,
-      city,
-      state,
-      start_datetime,
-      end_datetime,
-      ticket_price_cents,
-      is_free,
-      target_amount_cents,
-      raised_amount_cents,
-      status,
-      hero_image_url
+      title, category_id, org_id, description, purpose, venue, city, state,
+      start_datetime, end_datetime, ticket_price_cents, is_free,
+      target_amount_cents, raised_amount_cents, status, hero_image_url
     } = req.body;
 
-    // Check if event exists
     const [existingEvent] = await pool.query('SELECT id FROM events WHERE id = ?', [eventId]);
-    if (!existingEvent.length) {
-      return res.status(404).json({ 
-        error: 'EVENT_NOT_FOUND', 
-        message: 'Event not found' 
-      });
-    }
+    if (!existingEvent.length) return res.status(404).json({ error: 'EVENT_NOT_FOUND', message: 'Event not found' });
 
-    // Validate category_id if provided
     if (category_id) {
       const [categoryCheck] = await pool.query('SELECT id FROM categories WHERE id = ?', [category_id]);
-      if (!categoryCheck.length) {
-        return res.status(400).json({ 
-          error: 'INVALID_CATEGORY', 
-          message: 'Category does not exist' 
-        });
-      }
+      if (!categoryCheck.length) return res.status(400).json({ error: 'INVALID_CATEGORY', message: 'Category does not exist' });
     }
-
-    // Validate org_id if provided
     if (org_id) {
       const [orgCheck] = await pool.query('SELECT id FROM organizations WHERE id = ?', [org_id]);
-      if (!orgCheck.length) {
-        return res.status(400).json({ 
-          error: 'INVALID_ORGANIZATION', 
-          message: 'Organization does not exist' 
-        });
-      }
+      if (!orgCheck.length) return res.status(400).json({ error: 'INVALID_ORGANIZATION', message: 'Organization does not exist' });
     }
-
-    // Validate datetime if provided
     if (start_datetime && end_datetime) {
       const startDate = new Date(start_datetime);
       const endDate = new Date(end_datetime);
-      
       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        return res.status(400).json({ 
-          error: 'INVALID_DATETIME', 
-          message: 'Invalid datetime format' 
-        });
+        return res.status(400).json({ error: 'INVALID_DATETIME', message: 'Invalid datetime format' });
       }
-
       if (startDate >= endDate) {
-        return res.status(400).json({ 
-          error: 'INVALID_DATETIME_RANGE', 
-          message: 'start_datetime must be before end_datetime' 
-        });
+        return res.status(400).json({ error: 'INVALID_DATETIME_RANGE', message: 'start_datetime must be before end_datetime' });
       }
     }
 
-    // Build dynamic update query based on provided fields
     const updateFields = [];
     const updateValues = [];
-
     if (title !== undefined) { updateFields.push('title = ?'); updateValues.push(title); }
     if (category_id !== undefined) { updateFields.push('category_id = ?'); updateValues.push(category_id); }
     if (org_id !== undefined) { updateFields.push('org_id = ?'); updateValues.push(org_id); }
@@ -413,18 +264,13 @@ router.put('/:id', async (req, res) => {
     if (hero_image_url !== undefined) { updateFields.push('hero_image_url = ?'); updateValues.push(hero_image_url); }
 
     if (updateFields.length === 0) {
-      return res.status(400).json({ 
-        error: 'NO_FIELDS_TO_UPDATE', 
-        message: 'No fields provided for update' 
-      });
+      return res.status(400).json({ error: 'NO_FIELDS_TO_UPDATE', message: 'No fields provided for update' });
     }
 
     updateValues.push(eventId);
-
     const updateQuery = `UPDATE events SET ${updateFields.join(', ')} WHERE id = ?`;
     await pool.query(updateQuery, updateValues);
 
-    // Return updated event
     const [updatedEvent] = await pool.query(`
       SELECT e.*, c.name AS category_name, o.name AS org_name 
       FROM events e
@@ -436,27 +282,18 @@ router.put('/:id', async (req, res) => {
     res.json(updatedEvent[0]);
   } catch (err) {
     console.error('PUT /api/events/:id error:', err);
-    res.status(500).json({ 
-      error: 'DATABASE_ERROR', 
-      message: err.message 
-    });
+    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
   }
 });
 
-// DELETE /api/events/:id - Delete an event with enhanced validation
+// DELETE /api/events/:id
 router.delete('/:id', async (req, res) => {
   try {
     const eventId = Number.parseInt(req.params.id, 10);
-    
-    // Validate event ID
     if (!Number.isInteger(eventId) || eventId <= 0) {
-      return res.status(400).json({ 
-        error: 'BAD_ID', 
-        message: 'Event ID must be a positive integer' 
-      });
+      return res.status(400).json({ error: 'BAD_ID', message: 'Event ID must be a positive integer' });
     }
 
-    // Check if event exists and get current registrations
     const [eventCheck] = await pool.query(
       `SELECT e.*, 
               (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) as registration_count
@@ -466,15 +303,11 @@ router.delete('/:id', async (req, res) => {
     );
 
     if (!eventCheck.length) {
-      return res.status(404).json({ 
-        error: 'EVENT_NOT_FOUND', 
-        message: 'Event not found' 
-      });
+      return res.status(404).json({ error: 'EVENT_NOT_FOUND', message: 'Event not found' });
     }
 
     const event = eventCheck[0];
 
-    // Check if event has registrations
     if (event.registration_count > 0) {
       return res.status(409).json({
         error: 'EVENT_HAS_REGISTRATIONS',
@@ -483,10 +316,8 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
-    // Check if event is in the past
     const currentDateTime = new Date();
     const eventEndDateTime = new Date(event.end_datetime);
-    
     if (eventEndDateTime < currentDateTime) {
       return res.status(409).json({
         error: 'EVENT_ALREADY_ENDED',
@@ -494,35 +325,24 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
-    // Delete the event
     await pool.query('DELETE FROM events WHERE id = ?', [eventId]);
 
     res.status(200).json({
       success: true,
       message: 'Event deleted successfully',
       deletedId: eventId,
-      deletedEvent: {
-        title: event.title,
-        start_datetime: event.start_datetime
-      }
+      deletedEvent: { title: event.title, start_datetime: event.start_datetime }
     });
-
   } catch (err) {
     console.error('DELETE /api/events/:id error:', err);
-    
-    // Handle foreign key constraint errors
     if (err.code === 'ER_ROW_IS_REFERENCED_2' || err.code === 'ER_ROW_IS_REFERENCED') {
       return res.status(409).json({
         error: 'EVENT_HAS_DEPENDENCIES',
         message: 'Cannot delete event due to existing dependencies in the database.'
       });
     }
-
-    res.status(500).json({ 
-      error: 'DATABASE_ERROR', 
-      message: err.message 
-    });
+    res.status(500).json({ error: 'DATABASE_ERROR', message: err.message });
   }
 });
 
-export default router;
+module.exports = router;

@@ -1,6 +1,6 @@
-// api/routes/categories.js - 需要添加的CRUD操作
-import { Router } from 'express';
-import { pool } from '../db.js';
+// api/routes/categories.js - CRUD operations that need to be added
+const { Router } = require('express');
+const { pool } = require('../db');
 
 const router = Router();
 
@@ -14,7 +14,7 @@ router.get('/', async (_req, res) => {
   }
 });
 
-// POST /api/categories - 创建新分类
+// POST /api/categories - Create a new category
 router.post('/', async (req, res) => {
   try {
     const { name } = req.body;
@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
 
     const categoryName = name.trim();
 
-    // 检查分类是否已存在
+    // Check whether the classification already exists
     const [existing] = await pool.query(
       'SELECT id FROM categories WHERE name = ?',
       [categoryName]
@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/categories/:id - 更新分类
+// PUT /api/categories/:id - Update classification
 router.put('/:id', async (req, res) => {
   try {
     const categoryId = Number.parseInt(req.params.id, 10);
@@ -80,7 +80,7 @@ router.put('/:id', async (req, res) => {
 
     const categoryName = name.trim();
 
-    // 检查分类是否存在
+    // Check whether the classification already exists
     const [existing] = await pool.query(
       'SELECT id FROM categories WHERE id = ?',
       [categoryId]
@@ -93,7 +93,7 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    // 检查名称是否已被其他分类使用
+    // Check whether the name is already in use by another category
     const [nameCheck] = await pool.query(
       'SELECT id FROM categories WHERE name = ? AND id != ?',
       [categoryName, categoryId]
@@ -123,7 +123,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/categories/:id - 删除分类
+// DELETE /api/categories/:id - Delete classification
 router.delete('/:id', async (req, res) => {
   try {
     const categoryId = Number.parseInt(req.params.id, 10);
@@ -135,7 +135,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
-    // 检查分类是否存在
+    // Check whether the classification exists
     const [existing] = await pool.query(
       'SELECT id FROM categories WHERE id = ?',
       [categoryId]
@@ -148,7 +148,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
-    // 检查是否有事件使用此分类
+    // Check if there are any events using this category
     const [eventsUsingCategory] = await pool.query(
       'SELECT COUNT(*) as event_count FROM events WHERE category_id = ?',
       [categoryId]
@@ -174,4 +174,4 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

@@ -1,0 +1,79 @@
+<div class="container mt-4">
+  <button class="btn btn-link mb-3" (click)="goBack()">← 返回列表</button>
+
+  <div *ngIf="loading" class="text-center mt-5">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">加载中...</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && event">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>{{ event.title }}</h2>
+      <div>
+        <button class="btn btn-warning me-2" (click)="editEvent()">编辑</button>
+        <button class="btn btn-danger" (click)="deleteEvent()">删除</button>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">活动详情</h5>
+        <p><strong>描述:</strong> {{ event.description }}</p>
+        <p><strong>目的:</strong> {{ event.purpose }}</p>
+        <p><strong>日期:</strong> {{ event.start_datetime | date:'yyyy-MM-dd HH:mm' }} - {{ event.end_datetime | date:'yyyy-MM-dd HH:mm' }}</p>
+        <p><strong>地点:</strong> {{ event.venue }}, {{ event.city }}, {{ event.state }}</p>
+        <p><strong>经纬度:</strong> {{ event.latitude }}, {{ event.longitude }}</p>
+        <p>
+          <strong>状态:</strong>
+          <span class="badge ms-2" [ngClass]="{
+            'bg-success': event.status === 'upcoming',
+            'bg-secondary': event.status === 'paused',
+            'bg-info': event.status === 'past'
+          }">
+            {{ event.status === 'upcoming' ? '进行中' : event.status === 'paused' ? '已暂停' : '已结束' }}
+          </span>
+        </p>
+        <p><strong>分类:</strong> {{ event.category_name }}</p>
+        <p><strong>组织:</strong> {{ event.org_name }}</p>
+        <p><strong>门票价格:</strong> {{ event.ticket_price_cents / 100 | currency }} {{ event.is_free ? '(免费)' : '' }}</p>
+        <p><strong>目标金额:</strong> {{ event.target_amount_cents / 100 | currency }}</p>
+        <p><strong>已筹金额:</strong> {{ event.raised_amount_cents / 100 | currency }}</p>
+        <p *ngIf="event.hero_image_url"><strong>活动图片:</strong> {{ event.hero_image_url }}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">注册信息 ({{ registrations.length }} 条记录)</h5>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>姓名</th>
+              <th>邮箱</th>
+              <th>门票数量</th>
+              <th>注册时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let registration of registrations">
+              <td>{{ registration.id }}</td>
+              <td>{{ registration.user_name }}</td>
+              <td>{{ registration.contact_email }}</td>
+              <td>{{ registration.num_tickets }}</td>
+              <td>{{ registration.registration_date | date:'yyyy-MM-dd HH:mm' }}</td>
+            </tr>
+            <tr *ngIf="registrations.length === 0">
+              <td colspan="5" class="text-center">暂无注册记录</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
