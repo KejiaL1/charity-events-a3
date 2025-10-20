@@ -7,7 +7,7 @@ import { EventService } from '../services/event.service';
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './event-form.html'
 })
 export class EventFormComponent implements OnInit {
