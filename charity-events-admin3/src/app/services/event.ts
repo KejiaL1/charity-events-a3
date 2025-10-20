@@ -8,7 +8,7 @@ import { Event, EventRegistration } from '../models/event.model';
   providedIn: 'root'
 })
 export class EventService {
-  private apiUrl = 'http://localhost:3000/api/events';
+  private apiUrl = 'https://24516675.it.scu.edu.au/api';
 
   constructor(private http: HttpClient) { }
 
@@ -27,22 +27,22 @@ export class EventService {
   }
 
   getEvent(id: number): Observable<Event> {
-    return this.http.get<Event>(`${this.apiUrl}/${id}`);
+    return this.http.get<Event>(`${this.apiUrl}/events/${id}`);
   }
 
   createEvent(event: Event): Observable<Event> {
-    return this.http.post<Event>(this.apiUrl, event);
+    return this.http.post<Event>(`${this.apiUrl}/events`, event);
   }
 
   updateEvent(id: number, event: Event): Observable<Event> {
-    return this.http.put<Event>(`${this.apiUrl}/${id}`, event);
+    return this.http.put<Event>(`${this.apiUrl}/events/${id}`, event);
   }
 
   deleteEvent(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+    return this.http.delete(`${this.apiUrl}/events/${id}`);
   }
 
   createRegistration(registration: EventRegistration): Observable<EventRegistration> {
-    return this.http.post<EventRegistration>('http://localhost:3000/api/registrations', registration);
+    return this.http.post<EventRegistration>(`${this.apiUrl}/registrations`, registration);
   }
 }

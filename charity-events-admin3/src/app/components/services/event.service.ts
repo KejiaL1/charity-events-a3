@@ -8,9 +8,8 @@ import { Registration } from '../models/registration';
   providedIn: 'root'
 })
 export class EventService {
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = 'https://24516675.it.scu.edu.au/api';
 
-  // 悉尼的固定经纬度
   private readonly defaultCoordinates = {
     latitude: -33.8688,
     longitude: 151.2093
@@ -42,18 +41,13 @@ export class EventService {
   }
 
   createEvent(eventData: Partial<Event>): Observable<Event> {
-    // 添加默认值
     const eventWithDefaults = {
       ...eventData,
-      // 设置固定城市信息
       city: 'Sydney',
       state: 'NSW',
-      // 设置固定经纬度
       latitude: this.defaultCoordinates.latitude,
       longitude: this.defaultCoordinates.longitude,
-      // 设置默认筹款金额为0
       raised_amount_cents: 0,
-      // 设置默认图片URL
       hero_image_url: eventData.hero_image_url || 'assets/img/default_event.jpg'
     };
 
